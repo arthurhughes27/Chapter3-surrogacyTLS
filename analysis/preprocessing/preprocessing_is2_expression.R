@@ -2,7 +2,6 @@
 # The end result should be a dataframe with columns as variables and rows as samples
 # The first two columns will give the participant identifier and time of sample, allowing for unique identification
 
-
 # Load necessary packages
 library(fs)
 library(dplyr)
@@ -11,101 +10,66 @@ library(stringr)
 # Specify folder within folder root where the raw data lives
 raw_data_folder = fs::path("data-raw", "is2")
 
-# Use fs::path() to specify the data paths robustly
-p_load_allnorm <- fs::path(raw_data_folder, "all_norm_eset.rds")
-p_load_youngnoNorm <- fs::path(raw_data_folder, "young_noNorm_eset.rds")
-p_load_youngnorm <- fs::path(raw_data_folder, "young_norm_eset.rds")
-
-# Read in the rds file
-all_norm_eset <- readRDS(p_load_allnorm)
-young_noNorm_eset <- readRDS(p_load_youngnoNorm)
-young_norm_eset <- readRDS(p_load_youngnorm)
-
-# Load the expression data
-is2_expr = all_norm_eset@assayData[["exprs"]] %>% 
-  t() %>% 
-  as.data.frame()
-
-young_noNorm_expr = young_noNorm_eset@assayData[["exprs"]] %>% 
-  t() %>% 
-  as.data.frame()
-
-young_norm_expr = young_norm_eset@assayData[["exprs"]] %>% 
-  t() %>% 
-  as.data.frame()
-
-# Make the column names lowercase
-colnames(is2_expr) = is2_expr %>% 
-  colnames() %>% 
-  tolower()
-
-colnames(young_noNorm_expr) = young_noNorm_expr %>% 
-  colnames() %>% 
-  tolower()
-
-colnames(young_norm_expr) = young_norm_expr %>% 
-  colnames() %>% 
-  tolower()
-
-# In the non-normalised data : remove genes with NA in some studies
-# This reduces the number of genes to the same amount as the normalised data 
-young_noNorm_expr = young_noNorm_expr[, colSums(is.na(young_noNorm_expr)) == 0]
-
-# Now extract information for the first two columns (participant_id and study_time_collected)
-sample_info_all_norm = rownames(is2_expr)
-sample_info_young_noNorm = rownames(young_noNorm_expr)
-sample_info_young_norm = rownames(young_norm_expr)
-
-# Use `stringr` and regular expressions to extract the participant_id and study_time_collected from the unique identifiers
-matches_all_norm <- str_match(sample_info_all_norm , "^(SUB[0-9.]+)_(-?[0-9.]+)_Days")
-matches_young_noNorm <- str_match(sample_info_young_noNorm , "^(SUB[0-9.]+)_(-?[0-9.]+)_Days")
-matches_young_norm <- str_match(sample_info_young_norm , "^(SUB[0-9.]+)_(-?[0-9.]+)_Days")
-
-
-# Participant ids
-participant_id_all_norm <- matches_all_norm[, 2]
-participant_id_young_noNorm <- matches_young_noNorm[, 2]
-participant_id_young_norm <- matches_young_norm[, 2]
-
-# Study times (numeric, rounded)
-study_time_collected_all_norm <- matches_all_norm[, 3] %>% 
-  as.numeric() %>% 
-  round(2)
-
-study_time_collected_young_noNorm <- matches_young_noNorm[, 3] %>% 
-  as.numeric() %>% 
-  round(2)
-
-study_time_collected_young_norm <- matches_young_norm[, 3] %>% 
-  as.numeric() %>% 
-  round(2)
-
-# Insert the identifying information as the first two columns 
-is2_expr <- is2_expr %>%
-  mutate(participant_id = participant_id_all_norm, study_time_collected = study_time_collected_all_norm) %>%
-  dplyr::select(participant_id, study_time_collected, everything())
-
-young_noNorm_expr <- young_noNorm_expr %>%
-  mutate(participant_id = participant_id_young_noNorm, study_time_collected = study_time_collected_young_noNorm) %>%
-  dplyr::select(participant_id, study_time_collected, everything())
-
-young_norm_expr <- young_norm_expr %>%
-  mutate(participant_id = participant_id_young_norm, study_time_collected = study_time_collected_young_norm) %>%
-  dplyr::select(participant_id, study_time_collected, everything())
-
-# Save processed dataframes
-
 # Specify folder within folder root where the processed data lives
 processed_data_folder = fs::path("data", "is2")
 
+# Use fs::path() to specify the data paths robustly
+p_load_allnoNorm <- fs::path(raw_data_folder, "all_noNorm_eset.rds")
+
+p_load_clinical <- fs::path(processed_data_folder, "is2_clinical.rds")
+
+# Read in the rds file
+all_noNorm_eset <- readRDS(p_load_allnoNorm)
+
+is2_clinical = readRDS(p_load_clinical)
+
+# Load the expression data
+is2_expr = all_noNorm_eset@assayData[["exprs"]] %>%
+  t() %>%
+  as.data.frame()
+
+# Make the column names lowercase
+colnames(is2_expr) = is2_expr %>%
+  colnames() %>%
+  tolower()
+
+# In the non-noNormalised data : remove genes with NA in some studies
+# This reduces the number of genes to the same amount as the noNormalised data
+# young_nonoNorm_expr = young_nonoNorm_expr[, colSums(is.na(young_nonoNorm_expr)) == 0]
+
+# Now extract information for the first two columns (participant_id and study_time_collected)
+sample_info_all_noNorm = rownames(is2_expr)
+
+
+# Use `stringr` and regular expressions to extract the participant_id and study_time_collected from the unique identifiers
+matches_all_noNorm <- str_match(sample_info_all_noNorm , "^(SUB[0-9.]+)_(-?[0-9.]+)_Days")
+
+
+# Participant ids
+participant_id_all_noNorm <- matches_all_noNorm[, 2]
+
+# Study times (numeric, rounded)
+study_time_collected_all_noNorm <- matches_all_noNorm[, 3] %>%
+  as.numeric() %>%
+  round(2)
+
+# Insert the identifying information as the first two columns
+pids = is2_clinical$participant_id %>%
+  unique()
+
+is2_expr <- is2_expr %>%
+  mutate(participant_id = participant_id_all_noNorm, study_time_collected = study_time_collected_all_noNorm) %>%
+  dplyr::select(participant_id, study_time_collected, everything()) %>%
+  filter(participant_id %in% pids)
+
+
+
+# Save processed dataframes
+
 # Use fs::path() to specify the data path robustly
-p_save_all_norm <- fs::path(processed_data_folder, "is2_expr.rds")
-p_save_young_noNorm <- fs::path(processed_data_folder, "young_noNorm_expr.rds")
-p_save_young_norm <- fs::path(processed_data_folder, "young_norm_expr.rds")
+p_save_all_noNorm <- fs::path(processed_data_folder, "is2_expr.rds")
 
 # Save dataframe
-saveRDS(is2_expr, file = p_save_all_norm)
-saveRDS(young_noNorm_expr, file = p_save_young_noNorm)
-saveRDS(young_norm_expr, file = p_save_young_norm)
+saveRDS(is2_expr, file = p_save_all_noNorm)
 
 rm(list = ls())

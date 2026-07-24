@@ -23,32 +23,32 @@ prevac_merged = readRDS(path_prevac)
 is2_merged = readRDS(path_is2)
 
 # Select the intersection of genes
-# ebovac2_genes = ebovac2_merged %>% 
-#   dplyr::select(a1cf:zzz3) %>% 
+# ebovac2_genes = ebovac2_merged %>%
+#   dplyr::select(a1cf:zzz3) %>%
 #   colnames()
-# 
-# hamburg_genes = hamburg_merged %>% 
-#   dplyr::select(a1cf:zzz3) %>% 
+#
+# hamburg_genes = hamburg_merged %>%
+#   dplyr::select(a1cf:zzz3) %>%
 #   colnames()
-# 
-# prevac_genes = prevac_merged %>% 
-#   dplyr::select(a1cf:zzz3) %>% 
+#
+# prevac_genes = prevac_merged %>%
+#   dplyr::select(a1cf:zzz3) %>%
 #   colnames()
-# 
-# is2_genes = is2_merged %>% 
-#   dplyr::select(a1cf:zzz3) %>% 
+#
+# is2_genes = is2_merged %>%
+#   dplyr::select(a1cf:zzz3) %>%
 #   colnames()
-# 
+#
 # intersection_genes = intersect(intersect(intersect(ebovac2_genes, hamburg_genes), prevac_genes),is2_genes)
-# 
+#
 # length(intersection_genes)
 
-ebovac2_merged_filtered = ebovac2_merged %>% 
+ebovac2_merged_filtered = ebovac2_merged %>%
   mutate(participant_id = as.character(pid),
-         time = recode(time, "P+0" = "P+0D")) %>% 
-  dplyr::select(participant_id, time, a1bg:zzz3)
+         time = recode(time, "P+0" = "P+0D")) %>%
+  dplyr::select(participant_id, time, a1cf:zzz3)
 
-hamburg_merged_filtered = hamburg_merged %>% 
+hamburg_merged_filtered = hamburg_merged %>%
   mutate(participant_id = as.character(pid),
          time = recode(
            time,
@@ -56,10 +56,10 @@ hamburg_merged_filtered = hamburg_merged %>%
            "d3" = "P+3D",
            "d7" = "P+7D",
            "d0" = "P+0D"
-         )) %>% 
+         )) %>%
   dplyr::select(participant_id, time, a1bg:zzz3)
 
-prevac_merged_filtered = prevac_merged %>% 
+prevac_merged_filtered = prevac_merged %>%
   mutate(participant_id = as.character(pid),
          time = recode(
            timepoint,
@@ -69,15 +69,15 @@ prevac_merged_filtered = prevac_merged %>%
            "J56"   = "B+0D",
            "J563h" = "B+3H",
            "J63"   = "B+7D"
-         )) %>% 
+         )) %>%
   dplyr::select(participant_id, time, a1bg:zzz3)
 
-is2_merged_filtered = is2_merged %>% 
+is2_merged_filtered = is2_merged %>%
   mutate(time = ifelse(
     study_time_collected %% 1 == 0,
     paste0("P+", as.integer(study_time_collected), "D"),
     paste0("P+", round(study_time_collected * 24), "H")
-  )) %>% 
+  )) %>%
   dplyr::select(participant_id, time, a1cf:zzz3)
 
 df_stacked <- bind_rows(
@@ -87,7 +87,7 @@ df_stacked <- bind_rows(
   is2_merged_filtered
 )
 
-df_merged_all = merge(x = df_clinical_all, 
+df_merged_all = merge(x = df_clinical_all,
                       y = df_stacked,
                       by = c("participant_id", "time"))
 
