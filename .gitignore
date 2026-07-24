@@ -1,3 +1,9 @@
+# Raw and processed data files, manuscript files, output files
+data/
+data-raw/
+manuscript/
+output/
+
 # History files
 .Rhistory
 .Rapp.history
