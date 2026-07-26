@@ -14,18 +14,32 @@ p_load_merged_all = fs::path(file = fs::path(processed_data_path, "df_merged_all
 df_merged_all = readRDS(p_load_merged_all)
 
 # Identify participants with entries at BOTH P+0D and P+1D
-participants_both_times <- df_merged_all %>%
-  filter(time %in% c("P+0D", "P+1D")) %>%
-  distinct(participant_id, time) %>%
-  count(participant_id) %>%
-  filter(n == 2) %>%
-  pull(participant_id)
+# participants_both_times <- df_merged_all %>%
+#   filter(time %in% c("P+0D", "P+1D")) %>%
+#   distinct(participant_id, time) %>%
+#   count(participant_id) %>%
+#   filter(n == 2) %>%
+#   pull(participant_id)
+
+genelist_prevac = df_merged_all %>%
+  filter(study_accession == "prevac") %>%
+  dplyr::select(a1cf:zzz3) %>%
+  dplyr::select(where( ~ !any(is.na(.)))) %>%
+  colnames()
+
+genelist_ebovac2 = df_merged_all %>%
+  filter(study_accession == "ebovac2") %>%
+  dplyr::select(a1cf:zzz3) %>%
+  dplyr::select(where( ~ !any(is.na(.)))) %>%
+  colnames()
+
+common_genes = intersect(genelist_prevac, genelist_ebovac2)
 
 df <- df_merged_all %>%
   filter(
-    study_accession == "SDY1276",
-    sex == "Female",!is.na(ab_p_28),!is.na(ab_p_0),
-    participant_id %in% participants_both_times
+    study_accession == "prevac",
+    group %in% c("Ad26MVA", "placebo"),
+    !is.na(ab_p_365)
   ) %>%
   arrange(participant_id) %>%
   dplyr::select(where( ~ !any(is.na(.))))
@@ -60,17 +74,17 @@ szero_train = train_df %>%
   dplyr::select(a1cf:zzz3)
 
 rise.screen.res = rise.screen(yone = yone_train,
-                       yzero = yzero_train,
-                       sone = sone_train,
-                       szero = szero_train,
-                       alpha = 0.05,
-                       power.want.s = 0.9,
-                       p.correction = "BH",
-                       alternative = "two.sided",
-                       paired = TRUE,
-                       weight.mode = "diff.epsilon",
-                       n.cores = 8,
-                       screen.plot.topN = 20)
+                              yzero = yzero_train,
+                              sone = sone_train,
+                              szero = szero_train,
+                              alpha = 0.05,
+                              power.want.s = 0.9,
+                              p.correction = "BH",
+                              alternative = "two.sided",
+                              paired = TRUE,
+                              weight.mode = "diff.epsilon",
+                              n.cores = 8,
+                              screen.plot.topN = 20)
 
 length(rise.screen.res[["significant.markers"]])
 

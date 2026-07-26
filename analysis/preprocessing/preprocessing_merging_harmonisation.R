@@ -87,6 +87,12 @@ df_stacked <- bind_rows(
   is2_merged_filtered
 )
 
+# Reorder gene columns alphabetically (clinical columns stay first)
+gene_cols_sorted <- sort(setdiff(colnames(df_stacked), colnames(df_clinical_all)))
+
+df_stacked <- df_stacked %>%
+  dplyr::select(participant_id, time, all_of(gene_cols_sorted))
+
 df_merged_all = merge(x = df_clinical_all,
                       y = df_stacked,
                       by = c("participant_id", "time"))
