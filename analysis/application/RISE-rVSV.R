@@ -24,13 +24,13 @@ genelist_prevac = df_merged_all %>%
   dplyr::select(where( ~ !any(is.na(.)))) %>%
   colnames()
 
-genelist_ebovac2 = df_merged_all %>%
-  filter(study_accession == "ebovac2") %>%
+genelist_hamburg = df_merged_all %>%
+  filter(study_accession == "hamburg") %>%
   dplyr::select(a1cf:zzz3) %>%
   dplyr::select(where( ~ !any(is.na(.)))) %>%
   colnames()
 
-common_genes = intersect(genelist_prevac, genelist_ebovac2)
+common_genes = intersect(genelist_prevac, genelist_hamburg)
 
 # How many input genes
 n_inputs = length(common_genes)
@@ -40,7 +40,7 @@ n_inputs
 train_df <- df_merged_all %>%
   filter(
     study_accession == "prevac",
-    group %in% c("Ad26MVA", "placebo"),
+    group %in% c("rVSV", "placebo"),
     time == "P+7D",
     !is.na(ab_p_180)
   ) %>%
@@ -58,21 +58,21 @@ participants_both_times <- df_merged_all %>%
 
 test_df <- df_merged_all %>%
   filter(
-    study_accession == "ebovac2",
-    group == "Ad26MVA",
+    study_accession == "hamburg",
+    group == "rVSV",
     time %in% c("P+0D", "P+7D"),
-    !is.na(ab_p_365),
+    !is.na(ab_p_180),
     !is.na(ab_p_0),
     participant_id %in% participants_both_times
   ) %>%
   arrange(participant_id) %>%
-  dplyr::select(participant_id, time, ab_p_365, ab_p_0,
+  dplyr::select(participant_id, time, ab_p_180, ab_p_0,
                 all_of(common_genes))
 
 
 # Step 2: Filter the long dataframe to include only the sampled participants
 yone_train = train_df %>%
-  filter(group == "Ad26MVA") %>%
+  filter(group == "rVSV") %>%
   pull(ab_p_180)
 
 yzero_train = train_df %>%
@@ -80,7 +80,7 @@ yzero_train = train_df %>%
   pull(ab_p_180)
 
 sone_train = train_df %>%
-  filter(group == "Ad26MVA") %>%
+  filter(group == "rVSV") %>%
   dplyr::select(all_of(common_genes))
 
 szero_train = train_df %>%
@@ -105,7 +105,7 @@ length(rise.screen.res[["significant.markers"]])
 markers = rise.screen.res[["significant.markers"]]
 weights = rise.screen.res[["screening.weights"]]
 
-saveRDS(markers, fs::path("output", "results", "application","TLS_Ad26MVA_prevac.rds"))
+saveRDS(markers, fs::path("output", "results", "application","TLS_rVSV_prevac.rds"))
 
 p1 = rise.screen.res$plot$screen.plot
 
@@ -113,7 +113,7 @@ p1
 
 yone_test = test_df %>%
   filter(time == "P+0D") %>%
-  pull(ab_p_365)
+  pull(ab_p_180)
 
 yzero_test = test_df %>%
   filter(time == "P+0D") %>%
@@ -158,7 +158,7 @@ p1_labeled <- p1 +
   )
 
 p2_labeled <- p2 +
-  labs(title = "B) Evaluation of 11-gene signature") +
+  labs(title = "B) Evaluation of 41-gene signature") +
   theme(
     plot.title = element_text(face = "bold", size = 25, hjust = 0),
     plot.title.position = "panel",
@@ -182,7 +182,7 @@ g <- egg::ggarrange(
 grid.newpage()
 grid.draw(g)
 
-ggsave(fs::path(figure_path, "Figure3-12.pdf"),
+ggsave(fs::path(figure_path, "Figure3-13.pdf"),
        g, width = 17, height = 6, dpi = 300)
 
 
@@ -201,30 +201,31 @@ genelist = rise.screen.res[["significant.markers"]]
 backgroundlist = colnames(sone_train)
 
 # Copy to clipboard, one gene per line
-write_clip(genelist)
+# write_clip(genelist)
 # write_clip(backgroundlist)
 
-writeLines(as.character(genelist), con = fs::path(results_path, "genelist_Ad26MVA_DAVID.txt"))
-writeLines(as.character(backgroundlist), con = fs::path(results_path, "backgroundlist_Ad26MVA_DAVID.txt"))
+writeLines(as.character(genelist), con = fs::path(results_path, "genelist_rVSV_DAVID.txt"))
+writeLines(as.character(backgroundlist), con = fs::path(results_path, "backgroundlist_rVSV_DAVID.txt"))
 
-# david_results <- read_csv(fs::path(results_path, "DAVID_Ad26MVA.csv"))
-#
-# david_table <- david_results %>%
-#   select(`Full Term`, Count, FDR) %>%
-#   rename(`Adjusted p-value` = FDR,
-#          Term = `Full Term`) %>%
-#   head(n = 10)  %>%
-#   mutate(`Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 0))
-#
-# david_table
-#
-# print(
-#   xtable(david_table,
-#          caption = "DAVID over-representation analysis results (Ad26MVA)",
-#          label = "tab:david_Ad26MVA"),
-#   include.rownames = FALSE,
-#   booktabs = TRUE
-# )
+david_results <- read_csv(fs::path(results_path, "DAVID_rVSV.csv"))
+
+david_table <- david_results %>%
+  select(`Full Term`, Count, FDR) %>%
+  rename(`Adjusted p-value` = FDR,
+         Term = `Full Term`) %>%
+  arrange(`Adjusted p-value`) %>%
+  head(n = 10)  %>%
+  mutate(`Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 0))
+
+david_table
+
+print(
+  xtable(david_table,
+         caption = "DAVID over-representation analysis results (rVSV)",
+         label = "tab:david_rVSV"),
+  include.rownames = FALSE,
+  booktabs = TRUE
+)
 
 
 # For each geneset, find which genes in genelist belong to it
@@ -249,4 +250,4 @@ print(
   include.rownames = FALSE
 )
 
-rm(list = ls())
+# rm(list = ls())

@@ -3,6 +3,8 @@ library(tidyverse)
 library(clipr)
 library(readr)
 library(xtable)
+library(egg)
+library(grid)
 
 set.seed(18042025)
 
@@ -29,6 +31,11 @@ df <- df_merged_all %>%
   ) %>%
   arrange(participant_id) %>%
   dplyr::select(where( ~ !any(is.na(.))))
+
+# How many input genes
+n_inputs = df %>%
+  dplyr::select(a1cf:zzz3) %>%
+  ncol()
 
 # Sample splitting
 train_ids <- df %>%
@@ -77,13 +84,11 @@ length(rise.screen.res[["significant.markers"]])
 markers = rise.screen.res[["significant.markers"]]
 weights = rise.screen.res[["screening.weights"]]
 
-p1 = rise.screen.res$plot
+saveRDS(markers, fs::path("output", "results", "application","TLS_TIV_SDY1276.rds"))
+
+p1 = rise.screen.res$plot$screen.plot
 
 p1
-
-# Save
-ggsave(fs::path(figure_path, "Figure3-11.pdf"),
-       p1, width = 10, height = 6, dpi = 300)
 
 yone_test = test_df %>%
   filter(time == "P+0D") %>%
@@ -121,8 +126,51 @@ p2 = rise.eval.res[["gamma.s.plot"]]
 
 p2
 
-ggsave(fs::path(figure_path, "Figure3-12.pdf"),
-       p2, width = 8, height = 6, dpi = 300)
+p1_labeled <- p1 +
+  labs(title = "A) Screening: top 20 markers ") +
+  theme(
+    plot.title = element_text(face = "bold", size = 25, hjust = 0),
+    plot.title.position = "panel",
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20)
+  )
+
+p2_labeled <- p2 +
+  labs(title = "B) Evaluation of 502-gene signature") +
+  theme(
+    plot.title = element_text(face = "bold", size = 25, hjust = 0),
+    plot.title.position = "panel",
+    axis.title.x = element_text(size = 20),
+    axis.title.y = element_text(size = 20)
+  )
+
+# Thin vertical divider between panels
+divider <- ggplot() +
+  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 1),
+               colour = "white", linewidth = 0.6) +
+  theme_void()
+
+g <- egg::ggarrange(
+  p1_labeled, divider, p2_labeled,
+  ncol   = 3,
+  widths = c(1, 0.2, 1),
+  draw   = FALSE
+)
+
+grid.newpage()
+grid.draw(g)
+
+ggsave(fs::path(figure_path, "Figure3-11.pdf"),
+       g, width = 17, height = 6, dpi = 300)
+
+
+
+
+
+
+
+
+
 
 # Check the spearman correlation
 gamma_Gamma = c(rise.eval.res[["gamma.s"]][["gamma.s.one"]], rise.eval.res[["gamma.s"]][["gamma.s.zero"]])
@@ -152,6 +200,7 @@ david_table <- david_results %>%
   rename(`Adjusted p-value` = FDR,
          Term = `Full Term`) %>%
   head(n = 10)  %>%
+  arrange(`Adjusted p-value`) %>%
   mutate(`Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 0))
 
 david_table
