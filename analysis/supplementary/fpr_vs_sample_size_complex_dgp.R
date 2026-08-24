@@ -25,8 +25,12 @@ corr <- 0
 
 n_grid <- seq(10, 100, 10)
 
-metrics_fpr_vs_n_complex <- cache_rds(results_path, {
-  do.call(rbind, lapply(n_grid, function(n) {
+metrics_fpr_vs_n_complex <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = n_grid,
+  key_fn = function(n) paste0("n=", n),
+  label_fn = function(n) sprintf("sample size n = %d", n),
+  compute_one = function(n) {
     res <- simulate_screening_metrics(
       n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = n_sim,
       valid_sigma = NA, corr = corr,
@@ -35,7 +39,7 @@ metrics_fpr_vs_n_complex <- cache_rds(results_path, {
     )
     df <- res[["per_replicate"]] %>% filter(correction == "unadjusted")
     data.frame(n = n, fpr = df$fpr)
-  }))
-})
+  }
+))
 
 plot_fpr_boxplot(metrics_fpr_vs_n_complex, x_var = "n", x_lab = "Sample size", out_path = figure_path)

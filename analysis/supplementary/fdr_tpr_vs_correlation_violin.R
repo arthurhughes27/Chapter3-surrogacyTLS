@@ -27,8 +27,12 @@ n_sim <- 500
 
 corr_grid <- seq(0, 0.5, 0.1)
 
-metrics_fdr_tpr_vs_corr <- cache_rds(results_path, {
-  do.call(rbind, lapply(corr_grid, function(corr) {
+metrics_fdr_tpr_vs_corr <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = corr_grid,
+  key_fn = function(corr) paste0("corr=", corr),
+  label_fn = function(corr) sprintf("correlation = %.1f", corr),
+  compute_one = function(corr) {
     res <- simulate_screening_metrics(
       n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = n_sim,
       valid_sigma = valid_sigma, corr = corr,
@@ -37,7 +41,7 @@ metrics_fdr_tpr_vs_corr <- cache_rds(results_path, {
     )
     df <- res[["per_replicate"]] %>% filter(correction == "unadjusted")
     data.frame(correlation = corr, fdr = df$fdr, tpr = df$tpr)
-  }))
-})
+  }
+))
 
 plot_power_fdr_violin_by_corr(metrics_fdr_tpr_vs_corr, out_path = figure_path)

@@ -23,19 +23,32 @@ prop_valid <- 0
 n_sim <- 1000
 corr <- 0
 
-null_pvalues <- cache_rds(results_path, {
-  res <- simulate_screening_metrics(
-    n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = n_sim,
-    valid_sigma = NA, corr = corr,
-    y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
-    mode = "simple", alpha = alpha, n_cores = SIMULATION_N_CORES
-  )
-  # Pool p-values across every candidate of every replicate: since
-  # prop_valid = 0, all p candidates in all n_sim replicates are null, so
-  # this reproduces the original figure's pooled null p-value distribution
-  # (n_sim x p values in total) computed in a single parallelised call
-  # rather than n_sim separate single-replicate calls.
-  data.frame(p = as.vector(res[["p_values"]][["p_unadjusted"]]))
-})
+# This figure has no natural outer grid (a single n_sim = 1000 call), so
+# it's split into chunks of replicates purely for checkpointing: each
+# chunk is saved as soon as it completes, rather than losing all 1000
+# replicates to a crash near the end.
+n_chunks <- 10
+chunk_size <- n_sim / n_chunks
+
+null_pvalues <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = seq_len(n_chunks),
+  key_fn = function(chunk) paste0("chunk=", chunk),
+  label_fn = function(chunk) sprintf("replicates %d-%d of %d",
+                                      (chunk - 1) * chunk_size + 1, chunk * chunk_size, n_sim),
+  compute_one = function(chunk) {
+    res <- simulate_screening_metrics(
+      n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = chunk_size,
+      valid_sigma = NA, corr = corr,
+      y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
+      mode = "simple", alpha = alpha, n_cores = SIMULATION_N_CORES
+    )
+    # Pool p-values across every candidate of every replicate in this
+    # chunk: since prop_valid = 0, all p candidates in all replicates are
+    # null, so this reproduces the original figure's pooled null p-value
+    # distribution (n_sim x p values in total).
+    data.frame(p = as.vector(res[["p_values"]][["p_unadjusted"]]))
+  }
+))
 
 plot_null_pvalue_histogram(null_pvalues, out_path = figure_path)

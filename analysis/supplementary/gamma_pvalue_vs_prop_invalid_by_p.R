@@ -34,19 +34,25 @@ valid_sigma <- 1.8 # corresponds to avg U_Y ~ 0.9 for this design
 prop_invalid_grid <- seq(0, 1, 0.1)
 n_sim <- 500
 
-run_gamma_grid <- function(p) {
-  do.call(rbind, lapply(prop_invalid_grid, function(prop_invalid) {
-    p_values <- simulate_gamma_pvalues(
-      n1 = n1, n0 = n0, p = p, prop_invalid = prop_invalid,
-      valid_sigma = valid_sigma, corr = corr,
-      y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
-      mode = "simple", n_sim = n_sim, n_cores = SIMULATION_N_CORES
-    )
-    data.frame(prop_invalid = prop_invalid, p_value = p_values)
-  }))
+run_gamma_grid <- function(p, path) {
+  do.call(rbind, checkpoint_grid(
+    path = path,
+    grid = prop_invalid_grid,
+    key_fn = function(prop_invalid) paste0("prop_invalid=", prop_invalid),
+    label_fn = function(prop_invalid) sprintf("p = %d, prop. invalid = %.1f", p, prop_invalid),
+    compute_one = function(prop_invalid) {
+      p_values <- simulate_gamma_pvalues(
+        n1 = n1, n0 = n0, p = p, prop_invalid = prop_invalid,
+        valid_sigma = valid_sigma, corr = corr,
+        y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
+        mode = "simple", n_sim = n_sim, n_cores = SIMULATION_N_CORES
+      )
+      data.frame(prop_invalid = prop_invalid, p_value = p_values)
+    }
+  ))
 }
 
-p_evaluate_p100 <- cache_rds(results_path_a, run_gamma_grid(p = 100))
-p_evaluate_p10 <- cache_rds(results_path_b, run_gamma_grid(p = 10))
+p_evaluate_p100 <- run_gamma_grid(p = 100, path = results_path_a)
+p_evaluate_p10 <- run_gamma_grid(p = 10, path = results_path_b)
 
 plot_gamma_pvalue_boxplot_pair(p_evaluate_p100, p_evaluate_p10, out_path = figure_path)

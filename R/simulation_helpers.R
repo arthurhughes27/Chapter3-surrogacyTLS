@@ -150,6 +150,8 @@ simulate_screening_metrics <- function(n1, n0, p, prop_valid, n_sim, valid_sigma
                                         mode = c("simple", "complex"),
                                         alpha = 0.05, n_cores = 1) {
   mode <- match.arg(mode)
+  message(sprintf("  simulating %d replicates (p = %d, n1 = %d, n0 = %d) on %d core(s)...",
+                   n_sim, p, n1, n0, n_cores))
 
   one_replicate <- function(k) {
     data <- gen_data(n1, n0, p, prop_valid, valid_sigma, corr,
@@ -260,6 +262,8 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
                                     n_sim = 500, n_cores = 1) {
   mode <- match.arg(mode)
   prop_valid <- 1 - prop_invalid
+  message(sprintf("  simulating %d gamma_S replicates (p = %d, n1 = %d, n0 = %d) on %d core(s)...",
+                   n_sim, p, n1, n0, n_cores))
 
   one_replicate <- function(k) {
     data <- gen_data(n1, n0, p, prop_valid, valid_sigma, corr,
@@ -297,16 +301,46 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
   unlist(reps)
 }
 
-#' Read a cached .rds file if it exists, otherwise evaluate `expr`, save
-#' the result to `path`, and return it. Set `force = TRUE` to ignore an
-#' existing cache and recompute (e.g. after changing simulation
-#' parameters).
-cache_rds <- function(path, expr, force = FALSE) {
-  if (!force && file.exists(path)) {
-    return(readRDS(path))
-  }
-  result <- expr
+#' Run `compute_one(value)` once for each element of `grid`, saving a
+#' checkpoint to `path` after every single element completes - so if the
+#' machine crashes mid-run, at most one grid point's worth of work is
+#' lost, not the whole script. On a later run, any grid point whose key
+#' is already present in the saved checkpoint file is skipped, so a
+#' script can simply be re-run to pick up where it left off.
+#'
+#' The checkpoint file stores a named list, keyed by `key_fn(value)`
+#' (a length-1 character string), so `key_fn` must give a distinct key
+#' for every element of `grid`. Prints a progress message (with elapsed
+#' time) before and after each grid point.
+#'
+#' Returns the list of results in `grid` order (not cache insertion
+#' order) - combine them yourself, e.g. `do.call(rbind, ...)` if
+#' `compute_one()` returns a data.frame, or `unlist(...)` if it returns a
+#' scalar/vector.
+#'
+#' @param force logical. If TRUE, ignore any existing checkpoint and
+#'   recompute every grid point from scratch (e.g. after changing
+#'   simulation parameters, since the cache has no way to detect that).
+checkpoint_grid <- function(path, grid, compute_one, key_fn = as.character,
+                             label_fn = key_fn, force = FALSE) {
   fs::dir_create(fs::path_dir(path))
-  saveRDS(result, path)
-  result
+  cache <- if (!force && file.exists(path)) readRDS(path) else list()
+
+  keys <- vapply(grid, key_fn, character(1))
+  labels <- vapply(grid, label_fn, character(1))
+
+  for (i in seq_along(grid)) {
+    if (!is.null(cache[[keys[i]]])) {
+      message(sprintf("[%d/%d] %s: already checkpointed, skipping.", i, length(grid), labels[i]))
+      next
+    }
+    message(sprintf("[%d/%d] %s: running...", i, length(grid), labels[i]))
+    t0 <- Sys.time()
+    cache[[keys[i]]] <- compute_one(grid[[i]])
+    saveRDS(cache, path)
+    elapsed <- as.numeric(difftime(Sys.time(), t0, units = "secs"))
+    message(sprintf("[%d/%d] %s: done in %.1fs (checkpoint saved).", i, length(grid), labels[i], elapsed))
+  }
+
+  unname(cache[keys])
 }

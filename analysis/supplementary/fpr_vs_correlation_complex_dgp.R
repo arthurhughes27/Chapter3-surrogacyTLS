@@ -26,8 +26,12 @@ n_sim <- 500
 
 corr_grid <- seq(0, 0.5, 0.1)
 
-metrics_fpr_vs_corr_complex <- cache_rds(results_path, {
-  do.call(rbind, lapply(corr_grid, function(corr) {
+metrics_fpr_vs_corr_complex <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = corr_grid,
+  key_fn = function(corr) paste0("corr=", corr),
+  label_fn = function(corr) sprintf("correlation = %.1f", corr),
+  compute_one = function(corr) {
     res <- simulate_screening_metrics(
       n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = n_sim,
       valid_sigma = NA, corr = corr,
@@ -36,8 +40,8 @@ metrics_fpr_vs_corr_complex <- cache_rds(results_path, {
     )
     df <- res[["per_replicate"]] %>% filter(correction == "unadjusted")
     data.frame(correlation = corr, fpr = df$fpr)
-  }))
-})
+  }
+))
 
 plot_fpr_violin(metrics_fpr_vs_corr_complex, x_var = "correlation",
                  x_lab = expression(sigma[corr]), out_path = figure_path)

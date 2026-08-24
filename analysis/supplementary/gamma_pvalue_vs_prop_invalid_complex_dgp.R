@@ -28,8 +28,12 @@ valid_sigma <- 80 # corresponds to avg U_Y ~ 0.9 for this design
 prop_invalid_grid <- seq(0, 1, 0.1)
 n_sim <- 500
 
-p_evaluate_complex <- cache_rds(results_path, {
-  do.call(rbind, lapply(prop_invalid_grid, function(prop_invalid) {
+p_evaluate_complex <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = prop_invalid_grid,
+  key_fn = function(prop_invalid) paste0("prop_invalid=", prop_invalid),
+  label_fn = function(prop_invalid) sprintf("prop. invalid = %.1f", prop_invalid),
+  compute_one = function(prop_invalid) {
     p_values <- simulate_gamma_pvalues(
       n1 = n1, n0 = n0, p = p, prop_invalid = prop_invalid,
       valid_sigma = valid_sigma, corr = corr,
@@ -37,7 +41,7 @@ p_evaluate_complex <- cache_rds(results_path, {
       mode = "complex", n_sim = n_sim, n_cores = SIMULATION_N_CORES
     )
     data.frame(prop_invalid = prop_invalid, p_value = p_values)
-  }))
-})
+  }
+))
 
 plot_gamma_pvalue_boxplot(p_evaluate_complex, out_path = figure_path)
