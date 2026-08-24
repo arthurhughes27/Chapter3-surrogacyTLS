@@ -22,7 +22,7 @@ y0_mean <- 0; y0_sd <- 1
 n <- 50
 p <- 500
 prop_valid <- 0
-n_sim <- 500
+n_sim <- 5
 
 corr_grid <- seq(0, 0.5, 0.1)
 

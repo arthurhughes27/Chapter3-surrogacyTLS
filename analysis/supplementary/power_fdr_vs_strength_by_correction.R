@@ -23,7 +23,7 @@ y0_mean <- 0; y0_sd <- 1
 n <- 50
 p <- 500
 prop_valid <- 0.1
-n_sim <- 500
+n_sim <- 5
 corr <- 0
 
 sigma_grid <- c(0.01, 0.65, 1.8, 3, 5.5, 9, 15, 30, 68, 244)
