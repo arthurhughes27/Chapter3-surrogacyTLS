@@ -29,26 +29,36 @@ corr <- 0
 sigma_grid <- c(0.01, 0.65, 1.8, 3, 5.5, 9, 15, 30, 68, 244)
 n_grid <- c(30, 50, 100)
 
-metrics_strength <- cache_rds(results_path, {
-  do.call(rbind, lapply(sigma_grid, function(sigma) {
+# Flatten the (sigma, n) grid to one list of pairs so each combination is
+# checkpointed independently.
+combos <- expand.grid(sigma = sigma_grid, n = n_grid, KEEP.OUT.ATTRS = FALSE)
+combo_grid <- split(combos, seq_len(nrow(combos)))
+
+metrics_strength <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = combo_grid,
+  key_fn = function(combo) sprintf("sigma=%s_n=%s", combo$sigma, combo$n),
+  label_fn = function(combo) sprintf("sigma = %s, n = %s", combo$sigma, combo$n),
+  compute_one = function(combo) {
+    sigma <- combo$sigma
+    n <- combo$n
+
     avg_us <- round(mean(calc_truth(
       p = p, prop_valid = prop_valid, valid_sigma = sigma, corr = corr,
       y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
       mode = "simple"
     )$us_true), 2)
 
-    do.call(rbind, lapply(n_grid, function(n) {
-      res <- simulate_screening_metrics(
-        n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = n_sim,
-        valid_sigma = sigma, corr = corr,
-        y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
-        mode = "simple", alpha = alpha, n_cores = SIMULATION_N_CORES
-      )
-      data.frame(n = n, sigma_S = sigma, avg_us = avg_us,
-                 avg_fdr = res[["metrics"]][["metrics_unadjusted"]][["avg_fdr"]],
-                 avg_tpr = res[["metrics"]][["metrics_unadjusted"]][["avg_tpr"]])
-    }))
-  }))
-})
+    res <- simulate_screening_metrics(
+      n1 = n / 2, n0 = n / 2, p = p, prop_valid = prop_valid, n_sim = n_sim,
+      valid_sigma = sigma, corr = corr,
+      y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
+      mode = "simple", alpha = alpha, n_cores = SIMULATION_N_CORES
+    )
+    data.frame(n = n, sigma_S = sigma, avg_us = avg_us,
+               avg_fdr = res[["metrics"]][["metrics_unadjusted"]][["avg_fdr"]],
+               avg_tpr = res[["metrics"]][["metrics_unadjusted"]][["avg_tpr"]])
+  }
+))
 
 plot_power_fdr_vs_strength(metrics_strength, out_path = figure_path)

@@ -28,8 +28,12 @@ corr <- 0
 
 sigma_grid <- c(0.01, 0.65, 1.8, 3, 5.5, 9, 15, 30, 68, 244)
 
-metrics_by_correction <- cache_rds(results_path, {
-  do.call(rbind, lapply(sigma_grid, function(sigma) {
+metrics_by_correction <- do.call(rbind, checkpoint_grid(
+  path = results_path,
+  grid = sigma_grid,
+  key_fn = function(sigma) paste0("sigma=", sigma),
+  label_fn = function(sigma) sprintf("sigma = %s", sigma),
+  compute_one = function(sigma) {
     avg_us <- round(mean(calc_truth(
       p = p, prop_valid = prop_valid, valid_sigma = sigma, corr = corr,
       y1_mean = y1_mean, y1_sd = y1_sd, y0_mean = y0_mean, y0_sd = y0_sd,
@@ -54,7 +58,7 @@ metrics_by_correction <- cache_rds(results_path, {
       avg_fdr_by = res[["metrics"]][["metrics_by"]][["avg_fdr"]],
       avg_tpr_by = res[["metrics"]][["metrics_by"]][["avg_tpr"]]
     )
-  }))
-})
+  }
+))
 
 plot_power_fdr_by_correction(metrics_by_correction, out_path = figure_path)
