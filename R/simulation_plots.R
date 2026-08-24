@@ -4,12 +4,11 @@
 # across the main-text and supplementary "twin" figures (identical designs,
 # differing only by data-generation mode) instead of being copy-pasted.
 
-#' Save a plot as both .pdf and .eps at `out_path` (without extension),
-#' creating the destination directory if it does not already exist.
-save_plot_pdf_eps <- function(plot, out_path, width, height, dpi = 800) {
+#' Save a plot as a .pdf at `out_path` (without extension), creating the
+#' destination directory if it does not already exist.
+save_plot_pdf <- function(plot, out_path, width, height, dpi = 800) {
   fs::dir_create(fs::path_dir(out_path))
   ggsave(paste0(out_path, ".pdf"), plot, units = "cm", width = width, height = height, dpi = dpi)
-  ggsave(paste0(out_path, ".eps"), plot, units = "cm", width = width, height = height, dpi = dpi)
 }
 
 #' Boxplot of a false positive rate metric across a grid (e.g. sample size),
@@ -27,7 +26,7 @@ plot_fpr_boxplot <- function(df, x_var, x_lab, out_path,
           axis.title = element_text(size = 35),
           legend.position = "none")
 
-  save_plot_pdf_eps(p, out_path, width = width, height = height)
+  save_plot_pdf(p, out_path, width = width, height = height)
   p
 }
 
@@ -45,7 +44,7 @@ plot_fpr_violin <- function(df, x_var, x_lab, out_path,
           axis.title.x = element_text(size = 55)) +
     scale_fill_gradient2(low = "white", mid = "lightcoral", high = "red", midpoint = 0.25)
 
-  save_plot_pdf_eps(p, out_path, width = width, height = height)
+  save_plot_pdf(p, out_path, width = width, height = height)
   p
 }
 
@@ -88,7 +87,7 @@ plot_power_fdr_vs_strength <- function(df, out_path, alpha_line = 0.05,
     )
   )
 
-  save_plot_pdf_eps(combined, out_path, width = width, height = height)
+  save_plot_pdf(combined, out_path, width = width, height = height)
   combined
 }
 
@@ -139,7 +138,7 @@ plot_power_fdr_by_correction <- function(df, out_path, alpha_line = 0.05,
     )
   )
 
-  save_plot_pdf_eps(combined, out_path, width = width, height = height)
+  save_plot_pdf(combined, out_path, width = width, height = height)
   combined
 }
 
@@ -173,7 +172,7 @@ plot_power_fdr_violin_by_corr <- function(df, out_path, width = 35, height = 18)
     gridExtra::arrangeGrob(tpr_plot, fdr_plot, ncol = 2, widths = c(1, 1))
   )
 
-  save_plot_pdf_eps(combined, out_path, width = width, height = height)
+  save_plot_pdf(combined, out_path, width = width, height = height)
   combined
 }
 
@@ -189,7 +188,7 @@ plot_gamma_pvalue_boxplot <- function(df_long, out_path, alpha_line = 0.05,
     theme(plot.background = element_rect(fill = "white", color = "white"),
           legend.position = "none")
 
-  save_plot_pdf_eps(p, out_path, width = width, height = height)
+  save_plot_pdf(p, out_path, width = width, height = height)
   p
 }
 
@@ -222,7 +221,7 @@ plot_gamma_pvalue_boxplot_pair <- function(df_long_a, df_long_b, out_path,
     ncol = 1, rel_heights = c(0.1, 1)
   )
 
-  save_plot_pdf_eps(combined, out_path, width = width, height = height)
+  save_plot_pdf(combined, out_path, width = width, height = height)
   combined
 }
 
@@ -235,6 +234,6 @@ plot_null_pvalue_histogram <- function(df, out_path, width = 25, height = 7) {
     theme_minimal(base_size = 20) +
     theme(plot.background = element_rect(fill = "white", color = "white"))
 
-  save_plot_pdf_eps(p, out_path, width = width, height = height)
+  save_plot_pdf(p, out_path, width = width, height = height)
   p
 }
