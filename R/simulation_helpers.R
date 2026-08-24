@@ -40,8 +40,16 @@ gen_data <- function(n1, n0, p, prop_valid, valid_sigma, corr,
                       mode = c("simple", "complex")) {
   mode <- match.arg(mode)
 
-  p_valid <- as.numeric(prop_valid * p)
-  p_invalid <- as.numeric((1 - prop_valid) * p)
+  # round() rather than as.numeric(): prop_valid * p is floating-point
+  # arithmetic (e.g. 0.9 * 20 can come out as 17.999999999999996), and
+  # matrix()/rep() truncate (not round) a non-integer dimension argument,
+  # which silently produced one column too few/many and a
+  # "dimnames ... not equal to array extent" error downstream. Deriving
+  # p_invalid as p - p_valid (rather than its own separate
+  # (1 - prop_valid) * p computation) guarantees the two always sum to
+  # exactly p.
+  p_valid <- round(prop_valid * p)
+  p_invalid <- p - p_valid
 
   y1 <- rnorm(n1, y1_mean, y1_sd)
   y0 <- rnorm(n0, y0_mean, y0_sd)
