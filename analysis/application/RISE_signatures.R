@@ -56,7 +56,7 @@ p_combined <- (p1 | plot_spacer() | p2) +
     theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 25))
   )
 
-ggsave(fs::path(figure_path, "Figure3-overlap_combined.pdf"),
+ggsave(fs::path(figure_path, "rise_signature_overlap_by_vaccine.pdf"),
        p_combined, width = 13, height = 6, dpi = 300)
 
 # ---- Intersections (common + pairwise) at both levels ----

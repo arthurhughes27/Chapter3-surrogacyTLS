@@ -92,7 +92,7 @@ p1 <- ggplot(df_long, aes(x = measure, y = value, fill = measure)) +
 p1
 
 # Save
-ggsave(fs::path(figure_path, "Figure3-7.pdf"),
+ggsave(fs::path(figure_path, "sdy1276_nab_response_distribution.pdf"),
        p1, width = 10, height = 5, dpi = 300)
 
 rm(list = ls())
