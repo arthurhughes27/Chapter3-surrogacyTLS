@@ -1,3 +1,5 @@
+# RISE application: SDY1276 (TIV, sample-split into train/test)
+
 library(SurrogateRank)
 library(tidyverse)
 library(clipr)
@@ -6,14 +8,16 @@ library(xtable)
 library(egg)
 library(grid)
 
-set.seed(18042025)
+source(fs::path("analysis", "config.R"))
+source(fs::path("analysis", "functions", "rise_helpers.R"))
 
-processed_data_path <- fs::path("data")
-figure_path <- fs::path("output", "figures", "application")
-results_path = fs::path("output", "results", "application")
-p_load_merged_all = fs::path(file = fs::path(processed_data_path, "df_merged_all.rds"))
+set.seed(RISE_SEED)
 
-df_merged_all = readRDS(p_load_merged_all)
+figure_path <- fs::path(output_path, "figures", "application")
+results_path <- fs::path(output_path, "results", "application")
+p_load_merged_all <- fs::path(processed_data_path, "df_merged_all.rds")
+
+df_merged_all <- readRDS(p_load_merged_all)
 
 # Identify participants with entries at BOTH P+0D and P+1D
 participants_both_times <- df_merged_all %>%
@@ -33,7 +37,7 @@ df <- df_merged_all %>%
   dplyr::select(where( ~ !any(is.na(.))))
 
 # How many input genes
-n_inputs = df %>%
+n_inputs <- df %>%
   dplyr::select(a1cf:zzz3) %>%
   ncol()
 
@@ -50,131 +54,63 @@ train_df <- df %>%
 test_df <- df %>%
   filter(!(participant_id %in% train_ids))
 
-yone_train = train_df %>%
+yone_train <- train_df %>%
   filter(time == "P+0D") %>%
   pull(ab_p_28)
 
-yzero_train = train_df %>%
+yzero_train <- train_df %>%
   filter(time == "P+0D") %>%
   pull(ab_p_0)
 
-sone_train = train_df %>%
+sone_train <- train_df %>%
   filter(time == "P+1D") %>%
   dplyr::select(a1cf:zzz3)
 
-szero_train = train_df %>%
+szero_train <- train_df %>%
   filter(time == "P+0D") %>%
   dplyr::select(a1cf:zzz3)
 
-rise.screen.res = rise.screen(yone = yone_train,
-                       yzero = yzero_train,
-                       sone = sone_train,
-                       szero = szero_train,
-                       alpha = 0.05,
-                       power.want.s = 0.9,
-                       p.correction = "BH",
-                       alternative = "two.sided",
-                       paired = TRUE,
-                       weight.mode = "diff.epsilon",
-                       n.cores = 8,
-                       screen.plot.topN = 20)
-
-length(rise.screen.res[["significant.markers"]])
-
-markers = rise.screen.res[["significant.markers"]]
-weights = rise.screen.res[["screening.weights"]]
-
-saveRDS(markers, fs::path("output", "results", "application","TLS_TIV_SDY1276.rds"))
-
-p1 = rise.screen.res$plot$screen.plot
-
-p1
-
-yone_test = test_df %>%
+yone_test <- test_df %>%
   filter(time == "P+0D") %>%
   pull(ab_p_28)
 
-yzero_test = test_df %>%
+yzero_test <- test_df %>%
   filter(time == "P+0D") %>%
   pull(ab_p_0)
 
-sone_test = test_df %>%
+sone_test <- test_df %>%
   filter(time == "P+1D") %>%
   dplyr::select(a1cf:zzz3)
 
-szero_test = test_df %>%
+szero_test <- test_df %>%
   filter(time == "P+0D") %>%
   dplyr::select(a1cf:zzz3)
 
-rise.eval.res = rise.evaluate(
-  yone = yone_test,
-  yzero = yzero_test,
-  sone = sone_test,
-  szero = szero_test,
-  alpha = 0.05,
-  power.want.s = 0.9,
-  p.correction = "BH",
-  alternative = "two.sided",
-  paired = TRUE,
-  n.cores = 8,
-  markers = markers,
-  screening.weights = weights
+rise_res <- run_rise_pipeline(
+  yone_train = yone_train, yzero_train = yzero_train,
+  sone_train = sone_train, szero_train = szero_train,
+  yone_test = yone_test, yzero_test = yzero_test,
+  sone_test = sone_test, szero_test = szero_test,
+  screen_label = "A) Screening: top 20 markers ",
+  eval_label = "B) Evaluation of 502-gene signature",
+  figure_path = fs::path(figure_path, "Figure3-11.pdf"),
+  screen_power = 0.9, screen_paired = TRUE, n_cores = 8
 )
+
+rise.screen.res <- rise_res$screen
+rise.eval.res <- rise_res$evaluate
+markers <- rise_res$markers
+weights <- rise_res$weights
+
+length(markers)
+
+saveRDS(markers, fs::path(results_path, "TLS_TIV_SDY1276.rds"))
 
 rise.eval.res[["gamma.s.evaluate"]]
-p2 = rise.eval.res[["gamma.s.plot"]]
-
-p2
-
-p1_labeled <- p1 +
-  labs(title = "A) Screening: top 20 markers ") +
-  theme(
-    plot.title = element_text(face = "bold", size = 25, hjust = 0),
-    plot.title.position = "panel",
-    axis.title.x = element_text(size = 20),
-    axis.title.y = element_text(size = 20)
-  )
-
-p2_labeled <- p2 +
-  labs(title = "B) Evaluation of 502-gene signature") +
-  theme(
-    plot.title = element_text(face = "bold", size = 25, hjust = 0),
-    plot.title.position = "panel",
-    axis.title.x = element_text(size = 20),
-    axis.title.y = element_text(size = 20)
-  )
-
-# Thin vertical divider between panels
-divider <- ggplot() +
-  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 1),
-               colour = "white", linewidth = 0.6) +
-  theme_void()
-
-g <- egg::ggarrange(
-  p1_labeled, divider, p2_labeled,
-  ncol   = 3,
-  widths = c(1, 0.2, 1),
-  draw   = FALSE
-)
-
-grid.newpage()
-grid.draw(g)
-
-ggsave(fs::path(figure_path, "Figure3-11.pdf"),
-       g, width = 17, height = 6, dpi = 300)
-
-
-
-
-
-
-
-
-
 
 # Check the spearman correlation
-gamma_Gamma = c(rise.eval.res[["gamma.s"]][["gamma.s.one"]], rise.eval.res[["gamma.s"]][["gamma.s.zero"]])
-y_all = c(yone_test, yzero_test)
+gamma_Gamma <- c(rise.eval.res[["gamma.s"]][["gamma.s.one"]], rise.eval.res[["gamma.s"]][["gamma.s.zero"]])
+y_all <- c(yone_test, yzero_test)
 
 cor(gamma_Gamma, y_all, method = "spearman")
 
@@ -183,8 +119,8 @@ cor(rise.eval.res[["gamma.s"]][["gamma.s.one"]], yone_test, method = "spearman")
 cor(rise.eval.res[["gamma.s"]][["gamma.s.zero"]], yzero_test, method = "spearman")
 
 # DAVID analysis
-genelist = rise.screen.res[["significant.markers"]]
-backgroundlist = colnames(sone_train)
+genelist <- rise.screen.res[["significant.markers"]]
+backgroundlist <- colnames(sone_train)
 
 # Copy to clipboard, one gene per line
 # write_clip(genelist)
