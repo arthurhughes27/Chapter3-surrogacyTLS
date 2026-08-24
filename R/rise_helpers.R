@@ -1,8 +1,8 @@
-# Shared helper functions for the RISE application scripts in
-# analysis/application/. These wrap the rise.screen() -> rise.evaluate() ->
-# combined-plot pipeline that was previously duplicated (with only inputs
-# and labels differing) across RISE-Ad26MVA.R, RISE-rVSV.R and
-# RISE-SDY1276.R.
+# Shared (non-analysis) helper functions used by the RISE application
+# scripts in analysis/application/. These wrap the rise.screen() ->
+# rise.evaluate() -> combined-plot pipeline that was previously duplicated
+# (with only inputs and labels differing) across RISE-Ad26MVA.R,
+# RISE-rVSV.R and RISE-SDY1276.R.
 
 #' Run RISE screening followed by evaluation, combine the two diagnostic
 #' plots into a single labelled figure, and save it to disk.

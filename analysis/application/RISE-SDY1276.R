@@ -9,7 +9,7 @@ library(egg)
 library(grid)
 
 source(fs::path("analysis", "config.R"))
-source(fs::path("analysis", "functions", "rise_helpers.R"))
+source(fs::path("R", "rise_helpers.R"))
 
 set.seed(RISE_SEED)
 
@@ -93,7 +93,7 @@ rise_res <- run_rise_pipeline(
   sone_test = sone_test, szero_test = szero_test,
   screen_label = "A) Screening: top 20 markers ",
   eval_label = "B) Evaluation of 502-gene signature",
-  figure_path = fs::path(figure_path, "Figure3-11.pdf"),
+  figure_path = fs::path(figure_path, "rise_sdy1276_screening_evaluation.pdf"),
   screen_power = 0.9, screen_paired = TRUE, n_cores = 8
 )
 

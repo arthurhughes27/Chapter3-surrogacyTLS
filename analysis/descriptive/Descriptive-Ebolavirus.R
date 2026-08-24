@@ -113,7 +113,7 @@ p1 <- ggplot(df_counts, aes(x = timepoint, y = study_vaccine, fill = n_participa
 p1
 
 ggsave(
-  filename = "Figure3-9.pdf",
+  filename = "ebolavirus_antibody_sample_availability.pdf",
   path = descriptive_figures_folder,
   plot = p1,
   width = 26, height = 15, units = "cm"
@@ -204,7 +204,7 @@ p2 <- ggplot(df_counts_ge, aes(x = timepoint, y = study_vaccine, fill = n_partic
 p2
 
 ggsave(
-  filename = "Figure3-10.pdf",
+  filename = "ebolavirus_gene_expression_sample_availability.pdf",
   path = descriptive_figures_folder,
   plot = p2,
   width = 26, height = 15, units = "cm"
