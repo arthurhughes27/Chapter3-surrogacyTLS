@@ -1,3 +1,6 @@
+# RISE application: Ad26MVA/placebo (PREVAC, screening) evaluated on
+# Ad26MVA (EBOVAC2, evaluation)
+
 library(SurrogateRank)
 library(tidyverse)
 library(clipr)
@@ -7,33 +10,35 @@ library(xtable)
 library(egg)
 library(grid)
 
-set.seed(18042025)
+source(fs::path("analysis", "config.R"))
+source(fs::path("analysis", "functions", "rise_helpers.R"))
 
-processed_data_path <- fs::path("data")
-figure_path <- fs::path("output", "figures", "application")
-results_path = fs::path("output", "results", "application")
-p_load_merged_all = fs::path(file = fs::path(processed_data_path, "df_merged_all.rds"))
-p_load_BTM = fs::path("data", "BTM_processed.rds")
+set.seed(RISE_SEED)
 
-df_merged_all = readRDS(p_load_merged_all)
-BTM = readRDS(p_load_BTM)
+figure_path <- fs::path(output_path, "figures", "application")
+results_path <- fs::path(output_path, "results", "application")
+p_load_merged_all <- fs::path(processed_data_path, "df_merged_all.rds")
+p_load_BTM <- fs::path(processed_data_path, "BTM_processed.rds")
 
-genelist_prevac = df_merged_all %>%
+df_merged_all <- readRDS(p_load_merged_all)
+BTM <- readRDS(p_load_BTM)
+
+genelist_prevac <- df_merged_all %>%
   filter(study_accession == "prevac") %>%
   dplyr::select(a1cf:zzz3) %>%
   dplyr::select(where( ~ !any(is.na(.)))) %>%
   colnames()
 
-genelist_ebovac2 = df_merged_all %>%
+genelist_ebovac2 <- df_merged_all %>%
   filter(study_accession == "ebovac2") %>%
   dplyr::select(a1cf:zzz3) %>%
   dplyr::select(where( ~ !any(is.na(.)))) %>%
   colnames()
 
-common_genes = intersect(genelist_prevac, genelist_ebovac2)
+common_genes <- intersect(genelist_prevac, genelist_ebovac2)
 
 # How many input genes
-n_inputs = length(common_genes)
+n_inputs <- length(common_genes)
 
 n_inputs
 
@@ -71,124 +76,62 @@ test_df <- df_merged_all %>%
 
 
 # Step 2: Filter the long dataframe to include only the sampled participants
-yone_train = train_df %>%
+yone_train <- train_df %>%
   filter(group == "Ad26MVA") %>%
   pull(ab_p_180)
 
-yzero_train = train_df %>%
+yzero_train <- train_df %>%
   filter(group == "placebo") %>%
   pull(ab_p_180)
 
-sone_train = train_df %>%
+sone_train <- train_df %>%
   filter(group == "Ad26MVA") %>%
   dplyr::select(all_of(common_genes))
 
-szero_train = train_df %>%
+szero_train <- train_df %>%
   filter(group == "placebo") %>%
   dplyr::select(all_of(common_genes))
 
-rise.screen.res = rise.screen(yone = yone_train,
-                              yzero = yzero_train,
-                              sone = sone_train,
-                              szero = szero_train,
-                              alpha = 0.05,
-                              power.want.s = 0.8,
-                              p.correction = "BH",
-                              alternative = "two.sided",
-                              paired = FALSE,
-                              weight.mode = "diff.epsilon",
-                              n.cores = 6,
-                              screen.plot.topN = 20)
-
-length(rise.screen.res[["significant.markers"]])
-
-markers = rise.screen.res[["significant.markers"]]
-weights = rise.screen.res[["screening.weights"]]
-
-saveRDS(markers, fs::path("output", "results", "application","TLS_Ad26MVA_prevac.rds"))
-
-p1 = rise.screen.res$plot$screen.plot
-
-p1
-
-yone_test = test_df %>%
+yone_test <- test_df %>%
   filter(time == "P+0D") %>%
   pull(ab_p_365)
 
-yzero_test = test_df %>%
+yzero_test <- test_df %>%
   filter(time == "P+0D") %>%
   pull(ab_p_0)
 
-sone_test = test_df %>%
+sone_test <- test_df %>%
   filter(time == "P+7D") %>%
   dplyr::select(all_of(common_genes))
 
-szero_test = test_df %>%
+szero_test <- test_df %>%
   filter(time == "P+0D") %>%
   dplyr::select(all_of(common_genes))
 
-rise.eval.res = rise.evaluate(
-  yone = yone_test,
-  yzero = yzero_test,
-  sone = sone_test,
-  szero = szero_test,
-  alpha = 0.05,
-  power.want.s = 0.9,
-  p.correction = "BH",
-  alternative = "two.sided",
-  paired = TRUE,
-  n.cores = 6,
-  markers = markers,
-  screening.weights = weights
+rise_res <- run_rise_pipeline(
+  yone_train = yone_train, yzero_train = yzero_train,
+  sone_train = sone_train, szero_train = szero_train,
+  yone_test = yone_test, yzero_test = yzero_test,
+  sone_test = sone_test, szero_test = szero_test,
+  screen_label = "A) Screening: top 20 markers ",
+  eval_label = "B) Evaluation of 11-gene signature",
+  figure_path = fs::path(figure_path, "Figure3-12.pdf")
 )
+
+rise.screen.res <- rise_res$screen
+rise.eval.res <- rise_res$evaluate
+markers <- rise_res$markers
+weights <- rise_res$weights
+
+length(markers)
+
+saveRDS(markers, fs::path(results_path, "TLS_Ad26MVA_prevac.rds"))
 
 rise.eval.res[["gamma.s.evaluate"]]
-p2 = rise.eval.res[["gamma.s.plot"]]
-
-p2
-
-
-p1_labeled <- p1 +
-  labs(title = "A) Screening: top 20 markers ") +
-  theme(
-    plot.title = element_text(face = "bold", size = 25, hjust = 0),
-    plot.title.position = "panel",
-    axis.title.x = element_text(size = 20),
-    axis.title.y = element_text(size = 20)
-  )
-
-p2_labeled <- p2 +
-  labs(title = "B) Evaluation of 11-gene signature") +
-  theme(
-    plot.title = element_text(face = "bold", size = 25, hjust = 0),
-    plot.title.position = "panel",
-    axis.title.x = element_text(size = 20),
-    axis.title.y = element_text(size = 20)
-  )
-
-# Thin vertical divider between panels
-divider <- ggplot() +
-  geom_segment(aes(x = 0, xend = 0, y = 0, yend = 1),
-               colour = "white", linewidth = 0.6) +
-  theme_void()
-
-g <- egg::ggarrange(
-  p1_labeled, divider, p2_labeled,
-  ncol   = 3,
-  widths = c(1, 0.2, 1),
-  draw   = FALSE
-)
-
-grid.newpage()
-grid.draw(g)
-
-ggsave(fs::path(figure_path, "Figure3-12.pdf"),
-       g, width = 17, height = 6, dpi = 300)
-
 
 # Check the spearman correlation
-gamma_Gamma = c(rise.eval.res[["gamma.s"]][["gamma.s.one"]], rise.eval.res[["gamma.s"]][["gamma.s.zero"]])
-y_all = c(yone_test, yzero_test)
+gamma_Gamma <- c(rise.eval.res[["gamma.s"]][["gamma.s.one"]], rise.eval.res[["gamma.s"]][["gamma.s.zero"]])
+y_all <- c(yone_test, yzero_test)
 
 cor(gamma_Gamma, y_all, method = "spearman")
 
@@ -197,8 +140,8 @@ cor(rise.eval.res[["gamma.s"]][["gamma.s.one"]], yone_test, method = "spearman")
 cor(rise.eval.res[["gamma.s"]][["gamma.s.zero"]], yzero_test, method = "spearman")
 
 # DAVID analysis
-genelist = rise.screen.res[["significant.markers"]]
-backgroundlist = colnames(sone_train)
+genelist <- rise.screen.res[["significant.markers"]]
+backgroundlist <- colnames(sone_train)
 
 # Copy to clipboard, one gene per line
 write_clip(genelist)
@@ -207,25 +150,9 @@ write_clip(genelist)
 writeLines(as.character(genelist), con = fs::path(results_path, "genelist_Ad26MVA_DAVID.txt"))
 writeLines(as.character(backgroundlist), con = fs::path(results_path, "backgroundlist_Ad26MVA_DAVID.txt"))
 
-# david_results <- read_csv(fs::path(results_path, "DAVID_Ad26MVA.csv"))
-#
-# david_table <- david_results %>%
-#   select(`Full Term`, Count, FDR) %>%
-#   rename(`Adjusted p-value` = FDR,
-#          Term = `Full Term`) %>%
-#   head(n = 10)  %>%
-#   mutate(`Adjusted p-value` = formatC(`Adjusted p-value`, format = "e", digits = 0))
-#
-# david_table
-#
-# print(
-#   xtable(david_table,
-#          caption = "DAVID over-representation analysis results (Ad26MVA)",
-#          label = "tab:david_Ad26MVA"),
-#   include.rownames = FALSE,
-#   booktabs = TRUE
-# )
-
+# NOTE: DAVID over-representation results (analogous to RISE-rVSV.R and
+# RISE-SDY1276.R) are not yet available for Ad26MVA; the DAVID_Ad26MVA.csv
+# import/table has been skipped pending that analysis.
 
 # For each geneset, find which genes in genelist belong to it
 signature_genes <- map_chr(BTM[["genesets"]], function(geneset) {
