@@ -23,7 +23,7 @@ valid_sigma <- 1.8 # corresponds to avg surrogate strength ~ 0.9
 n <- 50
 p <- 500
 prop_valid <- 0.1
-n_sim <- 5
+n_sim <- 500
 
 corr_grid <- seq(0, 0.5, 0.1)
 

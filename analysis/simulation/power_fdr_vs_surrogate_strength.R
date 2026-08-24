@@ -20,7 +20,7 @@ y1_mean <- 3; y1_sd <- 1
 y0_mean <- 0; y0_sd <- 1
 p <- 500
 prop_valid <- 0.1
-n_sim <- 5
+n_sim <- 500
 corr <- 0
 
 # valid_sigma values chosen (by calc_truth(), see analysis/simulation/README

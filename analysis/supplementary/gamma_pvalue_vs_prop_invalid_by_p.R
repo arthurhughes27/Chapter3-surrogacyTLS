@@ -32,7 +32,7 @@ corr <- 0
 n1 <- 25; n0 <- 25
 valid_sigma <- 1.8 # corresponds to avg U_Y ~ 0.9 for this design
 prop_invalid_grid <- seq(0, 1, 0.1)
-n_sim <- 5
+n_sim <- 500
 
 run_gamma_grid <- function(p, path) {
   do.call(rbind, checkpoint_grid(
