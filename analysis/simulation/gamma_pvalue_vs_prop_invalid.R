@@ -9,7 +9,6 @@
 library(ggplot2)
 library(dplyr)
 library(SurrogateRank)
-library(Rsurrogate)
 
 source(fs::path("analysis", "config.R"))
 source(fs::path("R", "simulation_helpers.R"))

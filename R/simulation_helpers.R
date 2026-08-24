@@ -13,6 +13,22 @@
 #   - the n_sim replicate loop (independent draws) is parallelised via
 #     pbmcapply instead of a plain sequential for loop.
 
+#' Stop with a clear, single error message if any parallel replicate
+#' failed, instead of letting the failure surface many calls later as a
+#' confusing "index out of bounds" or similar error when the (silently
+#' missing) result is used downstream.
+check_replicates <- function(reps) {
+  failed <- vapply(reps, function(r) inherits(r, "try-error"), logical(1))
+  if (any(failed)) {
+    first_error <- reps[[which(failed)[1]]]
+    stop(sprintf(
+      "%d of %d parallel simulation replicates failed. First error:\n%s",
+      sum(failed), length(reps), conditionMessage(attr(first_error, "condition"))
+    ))
+  }
+  reps
+}
+
 #' Simulate primary outcomes and candidate surrogates for one replicate.
 #'
 #' @param mode "simple": valid surrogates are the primary response plus
@@ -125,7 +141,7 @@ calc_truth <- function(p, prop_valid, valid_sigma, corr,
 }
 
 #' Run n_sim replicates of per-candidate univariate surrogate testing (via
-#' Rsurrogate::test.surrogate), and summarise FPR/FDR/TPR/PPV under no
+#' SurrogateRank::test.surrogate), and summarise FPR/FDR/TPR/PPV under no
 #' correction, Bonferroni, Benjamini-Hochberg and Benjamini-Yekutieli
 #' correction. Replicates are independent, so are parallelised via
 #' pbmcapply when n_cores > 1.
@@ -139,13 +155,13 @@ simulate_screening_metrics <- function(n1, n0, p, prop_valid, n_sim, valid_sigma
     data <- gen_data(n1, n0, p, prop_valid, valid_sigma, corr,
                       y1_mean, y1_sd, y0_mean, y0_sd, mode = mode)
 
-    u_y_estimated <- Rsurrogate::test.surrogate(
+    u_y_estimated <- SurrogateRank::test.surrogate(
       yone = data$y1, yzero = data$y0, sone = data$y1, szero = data$y0, epsilon = 0.1
     )$u.y
     eps <- max(0, u_y_estimated - 0.5)
 
     p_unadjusted <- vapply(seq_len(p), function(j) {
-      ss.test <- Rsurrogate::test.surrogate(
+      ss.test <- SurrogateRank::test.surrogate(
         yone = data$y1, yzero = data$y0,
         sone = data$s1[, j], szero = data$s0[, j], epsilon = eps
       )
@@ -177,7 +193,7 @@ simulate_screening_metrics <- function(n1, n0, p, prop_valid, n_sim, valid_sigma
     )
   }
 
-  reps <- pbmcapply::pbmclapply(seq_len(n_sim), one_replicate, mc.cores = n_cores)
+  reps <- check_replicates(pbmcapply::pbmclapply(seq_len(n_sim), one_replicate, mc.cores = n_cores))
 
   summarise_method <- function(name) {
     metric_mean <- function(metric) {
@@ -255,7 +271,7 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
     colnames(sone) <- marker_names
     colnames(szero) <- marker_names
 
-    u_y_estimated <- Rsurrogate::test.surrogate(
+    u_y_estimated <- SurrogateRank::test.surrogate(
       yone = data$y1, yzero = data$y0, sone = data$y1, szero = data$y0, epsilon = 0.1
     )$u.y
     eps <- max(0, u_y_estimated - 0.5)
@@ -277,7 +293,8 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
     unname(eval_res[["gamma.s.evaluate"]]["p_unadjusted"])
   }
 
-  unlist(pbmcapply::pbmclapply(seq_len(n_sim), one_replicate, mc.cores = n_cores))
+  reps <- check_replicates(pbmcapply::pbmclapply(seq_len(n_sim), one_replicate, mc.cores = n_cores))
+  unlist(reps)
 }
 
 #' Read a cached .rds file if it exists, otherwise evaluate `expr`, save
