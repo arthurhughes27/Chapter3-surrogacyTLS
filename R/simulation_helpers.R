@@ -287,18 +287,18 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
       return.all.weights = TRUE
     )
 
-    # NOTE: return.all.evaluate must stay at its default (TRUE). The
-    # installed SurrogateRank::rise.evaluate() only assigns its
-    # `individual.metrics` local when return.all.evaluate is TRUE, but
-    # unconditionally references it in the function's return() list -
-    # passing FALSE throws "object 'individual.metrics' not found". This
-    # costs an extra internal rise.screen() call we don't otherwise need,
-    # but there's no way to avoid it without patching the package.
+    # NOTE: return.all.evaluate and return.plot.evaluate must both stay at
+    # their defaults (TRUE). The installed SurrogateRank::rise.evaluate()
+    # only assigns its `individual.metrics`/`gamma.s.plot` locals when the
+    # corresponding flag is TRUE, but unconditionally references both in
+    # the function's return() list - passing FALSE for either throws
+    # "object ... not found". This costs an extra internal rise.screen()
+    # call and a ggplot build we don't otherwise need, but there's no way
+    # to avoid it without patching the package.
     eval_res <- rise.evaluate(
       yone = data$y1, yzero = data$y0, sone = sone, szero = szero,
       alpha = 0.05, epsilon = eps, p.correction = "none", n.cores = 1,
-      markers = marker_names, screening.weights = screen_res[["screening.weights"]],
-      return.plot.evaluate = FALSE
+      markers = marker_names, screening.weights = screen_res[["screening.weights"]]
     )
 
     unname(eval_res[["gamma.s.evaluate"]]["p_unadjusted"])
