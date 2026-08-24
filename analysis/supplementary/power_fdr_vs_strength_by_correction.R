@@ -62,3 +62,5 @@ metrics_by_correction <- do.call(rbind, checkpoint_grid(
 ))
 
 plot_power_fdr_by_correction(metrics_by_correction, out_path = figure_path)
+
+rm(list = ls())

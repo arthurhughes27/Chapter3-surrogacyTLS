@@ -45,3 +45,5 @@ metrics_fpr_vs_corr_complex <- do.call(rbind, checkpoint_grid(
 
 plot_fpr_violin(metrics_fpr_vs_corr_complex, x_var = "correlation",
                  x_lab = expression(sigma[corr]), out_path = figure_path)
+
+rm(list = ls())

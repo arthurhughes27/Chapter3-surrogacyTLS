@@ -52,3 +52,5 @@ null_pvalues <- do.call(rbind, checkpoint_grid(
 ))
 
 plot_null_pvalue_histogram(null_pvalues, out_path = figure_path)
+
+rm(list = ls())

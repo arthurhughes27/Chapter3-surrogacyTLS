@@ -56,3 +56,5 @@ p_evaluate_p100 <- run_gamma_grid(p = 100, path = results_path_a)
 p_evaluate_p10 <- run_gamma_grid(p = 10, path = results_path_b)
 
 plot_gamma_pvalue_boxplot_pair(p_evaluate_p100, p_evaluate_p10, out_path = figure_path)
+
+rm(list = ls())

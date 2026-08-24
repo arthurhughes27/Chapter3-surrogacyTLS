@@ -45,3 +45,5 @@ metrics_fdr_tpr_vs_corr <- do.call(rbind, checkpoint_grid(
 ))
 
 plot_power_fdr_violin_by_corr(metrics_fdr_tpr_vs_corr, out_path = figure_path)
+
+rm(list = ls())

@@ -43,3 +43,5 @@ metrics_fpr_vs_n <- do.call(rbind, checkpoint_grid(
 ))
 
 plot_fpr_boxplot(metrics_fpr_vs_n, x_var = "n", x_lab = "Sample size", out_path = figure_path)
+
+rm(list = ls())

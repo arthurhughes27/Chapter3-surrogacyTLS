@@ -45,3 +45,5 @@ p_evaluate <- do.call(rbind, checkpoint_grid(
 ))
 
 plot_gamma_pvalue_boxplot(p_evaluate, out_path = figure_path)
+
+rm(list = ls())

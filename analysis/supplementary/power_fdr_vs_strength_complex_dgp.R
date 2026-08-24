@@ -59,3 +59,5 @@ metrics_strength_complex <- do.call(rbind, checkpoint_grid(
 ))
 
 plot_power_fdr_vs_strength(metrics_strength_complex, out_path = figure_path)
+
+rm(list = ls())
