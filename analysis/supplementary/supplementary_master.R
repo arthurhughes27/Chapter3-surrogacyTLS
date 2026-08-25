@@ -45,6 +45,11 @@ source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE
 
 gc()
 
+source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-Ad26MVA-Reversed.R"))
+source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-rVSV-Reversed.R"))
+
+gc()
+
 source(fs::path("analysis", "supplementary", "sensitivity_analyses", "epsilon_sensitivity_tiv_female.R"))
 source(fs::path("analysis", "supplementary", "sensitivity_analyses", "epsilon_sensitivity_tiv_male.R"))
 source(fs::path("analysis", "supplementary", "sensitivity_analyses", "epsilon_sensitivity_ad26mva.R"))
