@@ -35,6 +35,10 @@ source(fs::path("analysis", "supplementary", "gamma_pvalue_vs_prop_invalid_by_p.
 
 gc()
 
+source(fs::path("analysis", "supplementary", "RISE-SDY1276-Male.R"))
+
+gc()
+
 source(fs::path("analysis", "supplementary", "significant_markers_table_ad26mva.R"))
 source(fs::path("analysis", "supplementary", "significant_markers_table_rvsv.R"))
 source(fs::path("analysis", "supplementary", "significant_markers_table_sdy1276.R"))
