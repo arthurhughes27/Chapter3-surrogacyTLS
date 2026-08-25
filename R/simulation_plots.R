@@ -57,7 +57,7 @@ plot_power_fdr_vs_strength <- function(df, out_path, alpha_line = 0.05,
     geom_line(linewidth = 1.3) +
     geom_point() +
     ylab("False Discovery Proportion") +
-    xlab(expression(bar(U[S]))) +
+    xlab(expression(bar(U[X]))) +
     scale_color_brewer(palette = "Set1") +
     guides(color = guide_legend(title = "Sample size"),
            linetype = guide_legend(title = "Sample size")) +
@@ -69,7 +69,7 @@ plot_power_fdr_vs_strength <- function(df, out_path, alpha_line = 0.05,
     geom_line(linewidth = 1.3) +
     geom_point() +
     ylab("Empirical power") +
-    xlab(expression(bar(U[S]))) +
+    xlab(expression(bar(U[X]))) +
     scale_color_brewer(palette = "Set1") +
     guides(color = guide_legend(title = "Sample size"),
            linetype = guide_legend(title = "Sample size")) +
@@ -116,7 +116,7 @@ plot_power_fdr_by_correction <- function(df, out_path, alpha_line = 0.05,
   build_plot <- function(long_df, y_lab) {
     ggplot(long_df, aes(x = avg_us, y = value, linetype = correction, color = correction)) +
       geom_line(linewidth = 1.3) +
-      labs(x = expression(bar(U[S])), y = y_lab, linetype = "Correction", color = "Correction") +
+      labs(x = expression(bar(U[X])), y = y_lab, linetype = "Correction", color = "Correction") +
       scale_linetype_manual(values = correction_linetypes, labels = correction_labels) +
       scale_color_manual(values = correction_colors, labels = correction_labels) +
       theme_minimal(base_size = 24) +
