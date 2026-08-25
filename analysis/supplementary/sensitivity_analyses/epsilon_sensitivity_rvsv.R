@@ -103,7 +103,7 @@ sensitivity_df <- run_rise_epsilon_sensitivity(
   sone_train = sone_train, szero_train = szero_train,
   yone_test = yone_test, yzero_test = yzero_test,
   sone_test = sone_test, szero_test = szero_test,
-  screen_paired = FALSE, eval_paired = TRUE, eval_power = 0.9, n_cores = 6
+  screen_paired = FALSE, eval_paired = TRUE, eval_power = 0.8, n_cores = 6
 )
 
 saveRDS(sensitivity_df, fs::path(results_path, "epsilon_sensitivity_rvsv.rds"))
