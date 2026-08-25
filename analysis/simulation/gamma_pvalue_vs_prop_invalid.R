@@ -1,7 +1,7 @@
 # Data generation process 1 (simple): distribution of the evaluation-stage
 # p-value for gamma_S, as a function of the proportion of invalid
 # surrogates making up gamma_S (a combination of 20 candidates). Sample
-# size n = 50, valid surrogate strength U_Sj ~ 0.9 (calibrated via
+# size n = 50, valid surrogate strength U_Sj ~ 0.7 (calibrated via
 # valid_sigma below). The nominal significance level alpha = 0.05 is
 # plotted as a dashed reference line. Desired power for the composite
 # surrogate is fixed at 80%.
@@ -25,7 +25,12 @@ y0_mean <- 0; y0_sd <- 1
 p <- 20
 corr <- 0
 n1 <- 25; n0 <- 25
-valid_sigma <- 1.8 # corresponds to avg U_Y ~ 0.9 for this design
+# U_S = Phi(Delta_mu / sqrt(2 * (y_sd^2 + valid_sigma))) for mode = "simple"
+# with corr = 0 (s = y + N(0, valid_sigma) is Gaussian, so U_S is the
+# normal-difference Mann-Whitney formula). valid_sigma = 15 corresponds
+# to avg U_Sj ~ 0.70 for this design (Delta_mu = 3, y_sd = 1), down from
+# the previous 1.8 (avg U_Sj ~ 0.90) - the original calibration.
+valid_sigma <- 15
 prop_invalid_grid <- seq(0, 1, 0.1)
 n_sim <- 500
 
