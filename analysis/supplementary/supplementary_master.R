@@ -42,4 +42,5 @@ gc()
 source(fs::path("analysis", "supplementary", "significant_markers_table_ad26mva.R"))
 source(fs::path("analysis", "supplementary", "significant_markers_table_rvsv.R"))
 source(fs::path("analysis", "supplementary", "significant_markers_table_sdy1276.R"))
+source(fs::path("analysis", "supplementary", "significant_markers_table_sdy1276_male.R"))
 
