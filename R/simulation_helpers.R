@@ -276,6 +276,7 @@ simulate_screening_metrics <- function(n1, n0, p, prop_valid, n_sim, valid_sigma
 simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
                                     y1_mean, y1_sd, y0_mean, y0_sd,
                                     mode = c("simple", "complex"),
+                                    power_desired = 0.8,
                                     n_sim = 500, n_cores = 1) {
   mode <- match.arg(mode)
   prop_valid <- 1 - prop_invalid
@@ -315,9 +316,20 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
     # "object ... not found". This costs an extra internal rise.screen()
     # call and a ggplot build we don't otherwise need, but there's no way
     # to avoid it without patching the package.
+    #
+    # NOTE: unlike the screening call above, this deliberately does NOT
+    # reuse the fixed `eps` computed from Y alone. The original bespoke
+    # rise_evaluate() call passed power_desired = 0.8 with no epsilon
+    # argument at all, letting it compute its own non-inferiority margin
+    # adaptively from the evaluation-stage sample - matching the figure
+    # caption ("epsilon was computed adaptively, with desired power set
+    # to 80%"). Passing epsilon = eps here instead (as an earlier version
+    # of this port did) reuses the screening-stage margin for a different
+    # sample/purpose and was the primary cause of the p-value distribution
+    # not matching the originally reported pattern.
     eval_res <- rise.evaluate(
       yone = data$y1, yzero = data$y0, sone = sone, szero = szero,
-      alpha = 0.05, epsilon = eps, p.correction = "none", n.cores = 1,
+      alpha = 0.05, power.want.s = power_desired, p.correction = "none", n.cores = 1,
       markers = marker_names, screening.weights = screen_res[["screening.weights"]]
     )
 
