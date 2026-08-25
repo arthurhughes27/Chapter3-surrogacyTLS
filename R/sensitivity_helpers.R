@@ -79,14 +79,15 @@ run_rise_epsilon_sensitivity <- function(yone_train, yzero_train, sone_train, sz
 #' Write an epsilon sensitivity table (from run_rise_epsilon_sensitivity())
 #' to a .tex file, with the exact LaTeX column headers from the thesis
 #' (surrogate notation S -> Gamma): epsilon (screening), No. of genes in
-#' gamma_Gamma, delta_gammaGamma (90% CI), sigma_delta_gammaGamma, p-value.
+#' gamma_Gamma, delta_gammaGamma (90% CI), p-value. The standard
+#' deviation column from sensitivity_df is dropped (deemed irrelevant
+#' for the table, though it remains in the saved sensitivity_df/.rds).
 build_epsilon_sensitivity_table <- function(sensitivity_df, out_path, caption, label) {
-  table_df <- sensitivity_df
+  table_df <- sensitivity_df[, c("epsilon_screen", "n_predictors", "delta_ci", "p_value")]
   colnames(table_df) <- c(
     "$\\boldsymbol{\\epsilon}$ \\textbf{(screening)}",
     "\\textbf{No. of genes in} $\\boldsymbol{\\gamma_{\\Gamma}}$",
     "$\\boldsymbol{\\delta_{\\gamma_{\\Gamma}}}$ \\textbf{(90\\% C.I.)}",
-    "$\\boldsymbol{\\sigma_{\\delta_{\\gamma_{\\Gamma}}}}$",
     "\\textbf{p-value}"
   )
 
