@@ -127,6 +127,15 @@ length(markers)
 
 saveRDS(markers, fs::path(results_path, "TLS_rVSV_prevac.rds"))
 
+# Saved for analysis/supplementary/significant_markers_table_rvsv.R,
+# which builds the full significant-markers table from these.
+saveRDS(
+  list(screening.metrics = rise.screen.res[["screening.metrics"]],
+       screening.weights = rise.screen.res[["screening.weights"]],
+       significant.markers = rise.screen.res[["significant.markers"]]),
+  fs::path(results_path, "screening_rvsv.rds")
+)
+
 rise.eval.res[["gamma.s.evaluate"]]
 
 # Check the spearman correlation
