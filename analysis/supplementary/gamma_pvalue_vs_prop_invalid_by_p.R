@@ -2,7 +2,7 @@
 # evaluation-stage p-value for gamma_S as a function of the proportion of
 # invalid surrogates making up gamma_S, for two different numbers of
 # candidates: a) 100 candidates, b) 10 candidates. Sample size n = 50,
-# valid surrogate strength U_Sj ~ 0.9. The nominal significance level
+# valid surrogate strength U_Sj ~ 0.7. The nominal significance level
 # alpha = 0.05 is plotted as a dashed reference line. Desired power for
 # the composite surrogate is fixed at 80%.
 #
@@ -31,7 +31,11 @@ y1_mean <- 3; y1_sd <- 1
 y0_mean <- 0; y0_sd <- 1
 corr <- 0
 n1 <- 25; n0 <- 25
-valid_sigma <- 1.8 # corresponds to avg U_Y ~ 0.9 for this design
+# U_S = Phi(Delta_mu / sqrt(2 * (y_sd^2 + valid_sigma))) for mode = "simple"
+# with corr = 0 (same derivation as gamma_pvalue_vs_prop_invalid.R; U_S
+# per marker doesn't depend on p). valid_sigma = 15 corresponds to avg
+# U_Sj ~ 0.70 for this design (Delta_mu = 3, y_sd = 1).
+valid_sigma <- 15
 prop_invalid_grid <- seq(0, 1, 0.1)
 n_sim <- 500
 
