@@ -256,14 +256,23 @@ simulate_screening_metrics <- function(n1, n0, p, prop_valid, n_sim, valid_sigma
 #' unadjusted p-value from SurrogateRank::rise.evaluate() for each
 #' replicate.
 #'
-#' Mirrors the original bespoke pipeline (screen for per-marker weights,
-#' then evaluate the composite built from every candidate, not just the
-#' significant ones) using the current package: rise.screen() is called
-#' with weight.mode = "inverse.delta" (== the original's
-#' abs(1/delta) weight), normalise.weights = FALSE and
-#' return.all.weights = TRUE so every candidate (not only significant
-#' ones) gets a usable weight, and that full weight table is passed to
-#' rise.evaluate() together with markers = all candidate names.
+#' Mirrors the original bespoke pipeline (screen candidates, then evaluate
+#' the composite built from every candidate, not just the significant
+#' ones) using the current package: rise.screen() is called with
+#' weight.mode = "none" (every candidate contributes equally to the
+#' composite) and return.all.weights = TRUE so every candidate (not only
+#' significant ones) gets a weight, and that full weight table is passed
+#' to rise.evaluate() together with markers = all candidate names.
+#'
+#' weight.mode = "none" was chosen deliberately over "inverse.delta"
+#' (which literally reproduces the original's abs(1/delta) weight): with
+#' n1 = n0 = 25, a valid marker's per-candidate delta estimate can land
+#' very close to zero purely from sampling noise, and 1/abs(delta) is
+#' unbounded as delta -> 0, so a single such marker could completely
+#' dominate the composite regardless of how many invalid markers were
+#' also present - collapsing the expected graded FDP -> p-value
+#' relationship (low FDP always rejected, high FDP never rejected) into
+#' "always rejected unless every candidate is invalid".
 simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
                                     y1_mean, y1_sd, y0_mean, y0_sd,
                                     mode = c("simple", "complex"),
@@ -288,10 +297,13 @@ simulate_gamma_pvalues <- function(n1, n0, p, prop_invalid, valid_sigma, corr,
     )$u.y
     eps <- max(0, u_y_estimated - 0.5)
 
+    # weight.mode = "none": every candidate contributes equally (weight
+    # 1) to the composite gamma_S, rather than being weighted by its
+    # individual screening strength.
     screen_res <- rise.screen(
       yone = data$y1, yzero = data$y0, sone = sone, szero = szero,
       alpha = 0.05, epsilon = eps, p.correction = "none", n.cores = 1,
-      weight.mode = "inverse.delta", normalise.weights = FALSE,
+      weight.mode = "none", normalise.weights = FALSE,
       return.all.weights = TRUE
     )
 
