@@ -95,7 +95,7 @@ rise_res <- run_rise_pipeline(
   yone_test = yone_test, yzero_test = yzero_test,
   sone_test = sone_test, szero_test = szero_test,
   screen_label = "A) Screening: top 20 markers ",
-  eval_label = "B) Evaluation of 502-gene signature",
+  eval_label = "B) Evaluation of 57-gene signature",
   figure_path = fs::path(figure_path, "rise_sdy1276_male_screening_evaluation.pdf"),
   screen_power = 0.9, screen_paired = TRUE, n_cores = 8
 )
@@ -136,8 +136,8 @@ genelist <- rise.screen.res[["significant.markers"]]
 backgroundlist <- colnames(sone_train)
 
 # Copy to clipboard, one gene per line
-# write_clip(genelist)
-# write_clip(backgroundlist)
+write_clip(genelist)
+write_clip(backgroundlist)
 
 writeLines(as.character(genelist), con = fs::path(results_path, "genelist_SDY1276_Male_DAVID.txt"))
 writeLines(as.character(backgroundlist), con = fs::path(results_path, "backgroundlist_SDY1276_Male_DAVID.txt"))
