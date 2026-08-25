@@ -28,8 +28,7 @@ n1 <- 25; n0 <- 25
 # U_S = Phi(Delta_mu / sqrt(2 * (y_sd^2 + valid_sigma))) for mode = "simple"
 # with corr = 0 (s = y + N(0, valid_sigma) is Gaussian, so U_S is the
 # normal-difference Mann-Whitney formula). valid_sigma = 15 corresponds
-# to avg U_Sj ~ 0.70 for this design (Delta_mu = 3, y_sd = 1), down from
-# the previous 1.8 (avg U_Sj ~ 0.90) - the original calibration.
+# to avg U_Sj ~ 0.70 for this design (Delta_mu = 3, y_sd = 1).
 valid_sigma <- 15
 prop_invalid_grid <- seq(0, 1, 0.1)
 n_sim <- 500
