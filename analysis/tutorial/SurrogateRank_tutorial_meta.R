@@ -1,5 +1,6 @@
 library(SurrogateRank)
 library(ggplot2)
+library(stringr)
 library(cowplot)
 
 fig_dir <- fs::path("output", "figures", "tutorial")
