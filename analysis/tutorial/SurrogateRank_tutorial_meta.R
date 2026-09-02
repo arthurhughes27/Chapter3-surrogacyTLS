@@ -1,5 +1,6 @@
 library(SurrogateRank)
 library(ggplot2)
+library(cowplot)
 
 fig_dir <- fs::path("output", "figures", "tutorial")
 fs::dir_create(fig_dir)
@@ -12,6 +13,18 @@ tutorial_bg_theme <- theme(
   plot.background = element_rect(fill = tutorial_bg, color = tutorial_bg),
   legend.background = element_rect(fill = tutorial_bg, color = NA)
 )
+
+# minted's frame=lines draws a horizontal rule at the top and bottom of
+# each code block only (no side rules). plot.background's element_rect
+# border can't do sides independently (it's all four or none), so the
+# top/bottom rules are drawn separately as full-width lines at the very
+# edges of the rendered figure.
+add_top_bottom_border <- function(plot, colour = "black", size = 1) {
+  ggdraw() +
+    draw_plot(plot) +
+    draw_line(x = c(0, 1), y = c(1, 1), color = colour, size = size) +
+    draw_line(x = c(0, 1), y = c(0, 0), color = colour, size = size)
+}
 
 # Simulate multi-study, high-dimensional individual participant data:
 # 5 studies, 25 treated / 25 untreated per study, 100 candidate
@@ -56,7 +69,7 @@ meta_level_res  %>% as.data.frame()
 
 cat(length(sig_markers), "markers retained after meta-analytic screening\n")
 
-p1 = screen_meta_result$gamma.s.plot$screen.plot + tutorial_bg_theme
+p1 = add_top_bottom_border(screen_meta_result$gamma.s.plot$screen.plot + tutorial_bg_theme)
 
 p1
 
@@ -83,7 +96,7 @@ eval_meta_result <- rise.evaluate.meta(
 # Meta-analytic evaluation results for the composite marker
 print(eval_meta_result$evaluation.metrics.meta %>% as.data.frame() )
 
-p2 = eval_meta_result$gamma.s.plot$forest.plot + tutorial_bg_theme
+p2 = add_top_bottom_border(eval_meta_result$gamma.s.plot$forest.plot + tutorial_bg_theme)
 
 p2
 

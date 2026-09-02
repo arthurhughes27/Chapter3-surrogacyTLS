@@ -5,6 +5,7 @@
 library(SurrogateRank)
 library(fs)
 library(ggplot2)
+library(cowplot)
 
 set.seed(1234)
 
@@ -20,6 +21,18 @@ tutorial_bg_theme <- theme(
   plot.background = element_rect(fill = tutorial_bg, color = tutorial_bg),
   legend.background = element_rect(fill = tutorial_bg, color = NA)
 )
+
+# minted's frame=lines draws a horizontal rule at the top and bottom of
+# each code block only (no side rules). plot.background's element_rect
+# border can't do sides independently (it's all four or none), so the
+# top/bottom rules are drawn separately as full-width lines at the very
+# edges of the rendered figure.
+add_top_bottom_border <- function(plot, colour = "black", size = 1) {
+  ggdraw() +
+    draw_plot(plot) +
+    draw_line(x = c(0, 1), y = c(1, 1), color = colour, size = size) +
+    draw_line(x = c(0, 1), y = c(0, 0), color = colour, size = size)
+}
 
 # ------------------------------------------------------------------
 # Simulate a single high-dimensional dataset
@@ -93,7 +106,7 @@ screen_weights <- screen_result$screening.weights
 cat(length(sig_markers), "markers retained after screening\n")
 
 # Forest-plot-style summary of the top screened candidates
-screen_plot <- screen_result$plot$screen.plot + tutorial_bg_theme
+screen_plot <- add_top_bottom_border(screen_result$plot$screen.plot + tutorial_bg_theme)
 
 print(screen_plot)
 
@@ -120,7 +133,7 @@ print(eval_result$gamma.s.evaluate)
 
 # Rank-scale plot of the composite surrogate against the primary
 # response, illustrating the strength of the association
-eval_plot <- eval_result$gamma.s.plot + tutorial_bg_theme
+eval_plot <- add_top_bottom_border(eval_result$gamma.s.plot + tutorial_bg_theme)
 
 print(eval_plot)
 
