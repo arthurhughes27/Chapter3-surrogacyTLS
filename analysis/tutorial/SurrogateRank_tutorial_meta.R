@@ -1,7 +1,17 @@
 library(SurrogateRank)
+library(ggplot2)
 
 fig_dir <- fs::path("output", "figures", "tutorial")
 fs::dir_create(fig_dir)
+
+# Background colour matching the minted code-block background used in the
+# thesis LaTeX, so tutorial figures are visually tied to the code that
+# produced them.
+tutorial_bg <- "#F0F2FF"
+tutorial_bg_theme <- theme(
+  plot.background = element_rect(fill = tutorial_bg, color = tutorial_bg),
+  legend.background = element_rect(fill = tutorial_bg, color = NA)
+)
 
 # Simulate multi-study, high-dimensional individual participant data:
 # 5 studies, 25 treated / 25 untreated per study, 100 candidate
@@ -46,7 +56,7 @@ meta_level_res  %>% as.data.frame()
 
 cat(length(sig_markers), "markers retained after meta-analytic screening\n")
 
-p1 = screen_meta_result$gamma.s.plot$screen.plot
+p1 = screen_meta_result$gamma.s.plot$screen.plot + tutorial_bg_theme
 
 p1
 
@@ -73,7 +83,7 @@ eval_meta_result <- rise.evaluate.meta(
 # Meta-analytic evaluation results for the composite marker
 print(eval_meta_result$evaluation.metrics.meta %>% as.data.frame() )
 
-p2 = eval_meta_result$gamma.s.plot$forest.plot
+p2 = eval_meta_result$gamma.s.plot$forest.plot + tutorial_bg_theme
 
 p2
 

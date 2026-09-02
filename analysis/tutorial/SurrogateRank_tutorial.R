@@ -4,12 +4,22 @@
 # ------------------------------------------------------------------
 library(SurrogateRank)
 library(fs)
+library(ggplot2)
 
 set.seed(1234)
 
 # Output directory for figures
 fig_dir <- fs::path("output", "figures", "tutorial")
 fs::dir_create(fig_dir)
+
+# Background colour matching the minted code-block background used in the
+# thesis LaTeX, so tutorial figures are visually tied to the code that
+# produced them.
+tutorial_bg <- "#F0F2FF"
+tutorial_bg_theme <- theme(
+  plot.background = element_rect(fill = tutorial_bg, color = tutorial_bg),
+  legend.background = element_rect(fill = tutorial_bg, color = NA)
+)
 
 # ------------------------------------------------------------------
 # Simulate a single high-dimensional dataset
@@ -83,9 +93,11 @@ screen_weights <- screen_result$screening.weights
 cat(length(sig_markers), "markers retained after screening\n")
 
 # Forest-plot-style summary of the top screened candidates
-print(screen_result$plot$screen.plot)
+screen_plot <- screen_result$plot$screen.plot + tutorial_bg_theme
 
-ggsave(plot = screen_result$plot$screen.plot, path = fig_dir,
+print(screen_plot)
+
+ggsave(plot = screen_plot, path = fig_dir,
        filename = "tutorial_screen.pdf",
        height = 15, width = 30, units = "cm")
 
@@ -108,8 +120,10 @@ print(eval_result$gamma.s.evaluate)
 
 # Rank-scale plot of the composite surrogate against the primary
 # response, illustrating the strength of the association
-print(eval_result$gamma.s.plot)
+eval_plot <- eval_result$gamma.s.plot + tutorial_bg_theme
 
-ggsave(plot = eval_result$gamma.s.plot, path = fig_dir,
+print(eval_plot)
+
+ggsave(plot = eval_plot, path = fig_dir,
        filename = "tutorial_evaluate.pdf",
        height = 15, width = 30, units = "cm")
