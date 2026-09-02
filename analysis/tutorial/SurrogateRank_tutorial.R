@@ -28,8 +28,15 @@ tutorial_bg_theme <- theme(
 # border can't do sides independently (it's all four or none), so the
 # top/bottom rules are drawn separately as full-width lines at the very
 # edges of the rendered figure.
-add_top_bottom_border <- function(plot, colour = "black", size = 1) {
+#
+# Plots built with coord_fixed() (e.g. gamma.s.plot) reserve extra
+# "respected" aspect-ratio space around the panel that plot.background's
+# fill does not reach, leaving the true canvas edges unpainted underneath.
+# Drawing an explicit full-canvas rectangle first, before the plot itself,
+# ensures that gap picks up the background colour too.
+add_top_bottom_border <- function(plot, colour = "black", size = 1, bg = tutorial_bg) {
   ggdraw() +
+    draw_grob(grid::rectGrob(gp = grid::gpar(fill = bg, col = NA))) +
     draw_plot(plot) +
     draw_line(x = c(0, 1), y = c(1, 1), color = colour, size = size) +
     draw_line(x = c(0, 1), y = c(0, 0), color = colour, size = size)

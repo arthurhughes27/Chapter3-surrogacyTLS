@@ -21,11 +21,52 @@ tutorial_bg_theme <- theme(
 # border can't do sides independently (it's all four or none), so the
 # top/bottom rules are drawn separately as full-width lines at the very
 # edges of the rendered figure.
-add_top_bottom_border <- function(plot, colour = "black", size = 1) {
+#
+# Plots built with coord_fixed() (e.g. gamma.s.plot$screen.plot) reserve
+# extra "respected" aspect-ratio space around the panel that
+# plot.background's fill does not reach, leaving the true canvas edges
+# unpainted underneath. Drawing an explicit full-canvas rectangle first,
+# before the plot itself, ensures that gap picks up the background colour.
+add_top_bottom_border <- function(plot, colour = "black", size = 1, bg = tutorial_bg) {
   ggdraw() +
+    draw_grob(grid::rectGrob(gp = grid::gpar(fill = bg, col = NA))) +
     draw_plot(plot) +
     draw_line(x = c(0, 1), y = c(1, 1), color = colour, size = size) +
     draw_line(x = c(0, 1), y = c(0, 0), color = colour, size = size)
+}
+
+# forest.plot (from rise.evaluate.meta()) is a cowplot::plot_grid()
+# composite of pre-rendered sub-panels (study labels / forest / p-value
+# table), each with its own baked-in white panel background. Because
+# those sub-panels are already-drawn grobs by the time forest.plot is
+# returned, an outer `+ theme(...)` on the composite can only recolour
+# its own outermost background, not the white rects nested inside it.
+# Instead, walk the rendered grob tree directly and recolour any white
+# fills found, wherever in the composite they occur.
+recolor_white_backgrounds <- function(plot, to = tutorial_bg) {
+  g <- if (inherits(plot, "ggplot")) ggplotGrob(plot) else plot
+
+  is_white <- function(fill) {
+    !is.null(fill) && !is.na(fill) &&
+      (identical(fill, "white") || identical(toupper(fill), "#FFFFFF"))
+  }
+
+  recolor <- function(grob) {
+    if (!is.null(grob$gp) && !is.null(grob$gp$fill)) {
+      fill <- grob$gp$fill
+      fill[vapply(fill, is_white, logical(1))] <- to
+      grob$gp$fill <- fill
+    }
+    if (!is.null(grob$children) && length(grob$children) > 0) {
+      grob$children <- do.call(grid::gList, lapply(grob$children, recolor))
+    }
+    if (!is.null(grob$grobs)) {
+      grob$grobs <- lapply(grob$grobs, recolor)
+    }
+    grob
+  }
+
+  recolor(g)
 }
 
 # Simulate multi-study, high-dimensional individual participant data:
@@ -98,7 +139,7 @@ eval_meta_result <- rise.evaluate.meta(
 # Meta-analytic evaluation results for the composite marker
 print(eval_meta_result$evaluation.metrics.meta %>% as.data.frame() )
 
-p2 = add_top_bottom_border(eval_meta_result$gamma.s.plot$forest.plot + tutorial_bg_theme)
+p2 = add_top_bottom_border(recolor_white_backgrounds(eval_meta_result$gamma.s.plot$forest.plot))
 
 p2
 
