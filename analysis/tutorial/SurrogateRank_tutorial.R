@@ -5,6 +5,7 @@
 library(SurrogateRank)
 library(fs)
 library(ggplot2)
+library(stringr)
 
 set.seed(1234)
 
