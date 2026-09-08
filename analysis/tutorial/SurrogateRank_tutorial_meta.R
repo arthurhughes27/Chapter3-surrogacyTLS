@@ -7,7 +7,7 @@ library(dplyr)
 fig_dir <- fs::path("output", "figures", "tutorial")
 fs::dir_create(fig_dir)
 
-# Background colour matching the minted code-block background used in the
+## Background colour matching the minted code-block background used in the
 # thesis LaTeX, so tutorial figures are visually tied to the code that
 # produced them.
 tutorial_bg <- "#F0F2FF"
