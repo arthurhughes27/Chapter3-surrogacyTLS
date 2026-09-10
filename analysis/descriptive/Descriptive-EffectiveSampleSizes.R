@@ -7,7 +7,11 @@
 #   SDY1276 TIV:                 GE at day 0 & day 1;
 #                                 antibody at day 0 & day 28 (Female only)
 #   PREVAC Ad26/MVA + placebo:   GE at day 7;
-#                                 antibody at day 365
+#                                 antibody at day 180 (matches the
+#                                 screening-stage ab_p_180 filter used in
+#                                 analysis/application/RISE-Ad26MVA.R;
+#                                 day 365 is only required later, at the
+#                                 EBOVAC2 evaluation stage)
 #   PREVAC rVSV + placebo:       GE at day 7;
 #                                 antibody at day 180
 #   EBOVAC2 Ad26/MVA:            GE at day 0 & day 7;
@@ -81,7 +85,7 @@ analysis_plans <- list(
     analysis   = "PREVAC Ad26/MVA + placebo",
     groups     = c("prevac-Ad26MVA", "prevac-placebo"),
     ge_times   = "P+7D",
-    ab_cols    = "ab_p_365",
+    ab_cols    = "ab_p_180",
     sex_filter = NULL
   ),
   list(
