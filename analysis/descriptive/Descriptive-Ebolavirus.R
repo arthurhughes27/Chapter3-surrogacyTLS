@@ -125,7 +125,7 @@ shared_fill_max <- max(df_counts$n_participants, df_counts_ge$n_participants)
 # Shared heatmap theme/style, reused for both panels
 heatmap_theme <- theme_minimal(base_size = 16) +
   theme(
-    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12, face = "plain"),
     axis.text.y     = element_text(size = 13, face = "bold"),
     axis.title.x    = element_text(size = 14, margin = margin(t = 10)),
     plot.title      = element_text(size = 17, face = "bold", hjust = 0.5),

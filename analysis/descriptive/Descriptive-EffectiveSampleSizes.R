@@ -4,21 +4,20 @@
 # For each planned RISE analysis, an "eligible" participant is one with
 # every piece of data the analysis plan requires (no missing timepoints):
 #
-#   SDY1276 TIV (paired):                 GE at day 0 & day 1;
-#                                          antibody at day 0 & day 28
-#   PREVAC Ad26/MVA + placebo (pooled):   GE at day 7;
-#                                          antibody at day 365
-#   PREVAC rVSV + placebo (pooled):       GE at day 7;
-#                                          antibody at day 180
-#   EBOVAC2 Ad26/MVA (paired):            GE at day 0 & day 7;
-#                                          antibody at day 0 & day 365
-#   Hamburg rVSV (paired):                GE at day 0 & day 7;
-#                                          antibody at day 0 & day 180
+#   SDY1276 TIV:                 GE at day 0 & day 1;
+#                                 antibody at day 0 & day 28 (Female only)
+#   PREVAC Ad26/MVA + placebo:   GE at day 7;
+#                                 antibody at day 365
+#   PREVAC rVSV + placebo:       GE at day 7;
+#                                 antibody at day 180
+#   EBOVAC2 Ad26/MVA:            GE at day 0 & day 7;
+#                                 antibody at day 0 & day 365
+#   Hamburg rVSV:                GE at day 0 & day 7;
+#                                 antibody at day 0 & day 180
 #
-# "Pooled" analyses combine two study-vaccine arms into a single
-# treated-vs-untreated comparison, so both the per-arm and the pooled
-# total are reported. "Paired" analyses are single-arm (baseline vs.
-# follow-up within the same participants), so only one count applies.
+# PREVAC Ad26/MVA + placebo and PREVAC rVSV + placebo pool two
+# study-vaccine arms into a single treated-vs-untreated comparison, so
+# the reported N is the pooled total across both arms.
 # =============================================================================
 
 # ---- Libraries ----
@@ -44,16 +43,21 @@ ge_participants <- function(t) {
     pull(participant_id)
 }
 
-# One row per participant, carrying study_vaccine and the antibody
+# One row per participant, carrying study_vaccine, sex, and the antibody
 # columns needed below (values are repeated across a participant's rows
 # in df_clinical_all, so distinct() collapses them safely)
 ab_df <- df_clinical_all %>%
-  distinct(participant_id, study_vaccine, ab_p_0, ab_p_28, ab_p_180, ab_p_365)
+  distinct(participant_id, study_vaccine, sex, ab_p_0, ab_p_28, ab_p_180, ab_p_365)
 
-# Restrict to the given study-vaccine group(s), then require every listed
-# GE timepoint and antibody column to be non-missing
-eligible_participants <- function(groups, ge_times = character(0), ab_cols = character(0)) {
+# Restrict to the given study-vaccine group(s) (and, optionally, sex),
+# then require every listed GE timepoint and antibody column to be
+# non-missing
+eligible_participants <- function(groups, ge_times = character(0), ab_cols = character(0),
+                                  sex_filter = NULL) {
   d <- ab_df %>% filter(study_vaccine %in% groups)
+  if (!is.null(sex_filter)) {
+    d <- d %>% filter(sex == sex_filter)
+  }
   for (t in ge_times) {
     d <- d %>% filter(participant_id %in% ge_participants(t))
   }
@@ -63,86 +67,54 @@ eligible_participants <- function(groups, ge_times = character(0), ab_cols = cha
   d
 }
 
-# y-axis-style display labels, matching Descriptive-Ebolavirus.R
-group_display_labels <- c(
-  "prevac-rVSV"            = "PREVAC rVSV",
-  "prevac-Ad26MVA"         = "PREVAC Ad26/MVA",
-  "prevac-placebo"         = "PREVAC placebo",
-  "ebovac2-Ad26MVA"        = "EBOVAC2 Ad26/MVA",
-  "hamburg-rVSV"           = "Hamburg rVSV",
-  "SDY1276-Influenza (IN)" = "SDY1276 TIV"
-)
-
 # ---- Analysis plans ----
 
 analysis_plans <- list(
   list(
-    analysis = "SDY1276 TIV (paired)",
-    groups   = "SDY1276-Influenza (IN)",
-    ge_times = c("P+0D", "P+1D"),
-    ab_cols  = c("ab_p_0", "ab_p_28"),
-    pooled   = FALSE
+    analysis   = "SDY1276 TIV",
+    groups     = "SDY1276-Influenza (IN)",
+    ge_times   = c("P+0D", "P+1D"),
+    ab_cols    = c("ab_p_0", "ab_p_28"),
+    sex_filter = "Female"
   ),
   list(
-    analysis = "PREVAC Ad26/MVA + placebo (pooled)",
-    groups   = c("prevac-Ad26MVA", "prevac-placebo"),
-    ge_times = "P+7D",
-    ab_cols  = "ab_p_365",
-    pooled   = TRUE
+    analysis   = "PREVAC Ad26/MVA + placebo",
+    groups     = c("prevac-Ad26MVA", "prevac-placebo"),
+    ge_times   = "P+7D",
+    ab_cols    = "ab_p_365",
+    sex_filter = NULL
   ),
   list(
-    analysis = "PREVAC rVSV + placebo (pooled)",
-    groups   = c("prevac-rVSV", "prevac-placebo"),
-    ge_times = "P+7D",
-    ab_cols  = "ab_p_180",
-    pooled   = TRUE
+    analysis   = "PREVAC rVSV + placebo",
+    groups     = c("prevac-rVSV", "prevac-placebo"),
+    ge_times   = "P+7D",
+    ab_cols    = "ab_p_180",
+    sex_filter = NULL
   ),
   list(
-    analysis = "EBOVAC2 Ad26/MVA (paired)",
-    groups   = "ebovac2-Ad26MVA",
-    ge_times = c("P+0D", "P+7D"),
-    ab_cols  = c("ab_p_0", "ab_p_365"),
-    pooled   = FALSE
+    analysis   = "EBOVAC2 Ad26/MVA",
+    groups     = "ebovac2-Ad26MVA",
+    ge_times   = c("P+0D", "P+7D"),
+    ab_cols    = c("ab_p_0", "ab_p_365"),
+    sex_filter = NULL
   ),
   list(
-    analysis = "Hamburg rVSV (paired)",
-    groups   = "hamburg-rVSV",
-    ge_times = c("P+0D", "P+7D"),
-    ab_cols  = c("ab_p_0", "ab_p_180"),
-    pooled   = FALSE
+    analysis   = "Hamburg rVSV",
+    groups     = "hamburg-rVSV",
+    ge_times   = c("P+0D", "P+7D"),
+    ab_cols    = c("ab_p_0", "ab_p_180"),
+    sex_filter = NULL
   )
 )
 
-# ---- Build the table: one row per group, plus a Total row for pooled analyses ----
+# ---- Build the table: one row per analysis, N = total eligible participants ----
 
-build_plan_rows <- function(plan) {
-  eligible <- eligible_participants(plan$groups, plan$ge_times, plan$ab_cols)
-
-  group_rows <- tibble(study_vaccine = plan$groups) %>%
-    left_join(
-      eligible %>% count(study_vaccine, name = "n"),
-      by = "study_vaccine"
-    ) %>%
-    mutate(n = replace_na(n, 0)) %>%
-    transmute(
-      Analysis = plan$analysis,
-      Group    = group_display_labels[study_vaccine],
-      N        = n
-    )
-
-  if (plan$pooled) {
-    total_row <- tibble(
-      Analysis = plan$analysis,
-      Group    = "Total (pooled)",
-      N        = nrow(eligible)
-    )
-    group_rows <- bind_rows(group_rows, total_row)
-  }
-
-  group_rows
+build_plan_row <- function(plan) {
+  eligible <- eligible_participants(plan$groups, plan$ge_times, plan$ab_cols, plan$sex_filter)
+  tibble(Analysis = plan$analysis, N = nrow(eligible))
 }
 
-sample_size_table <- map_dfr(analysis_plans, build_plan_rows)
+sample_size_table <- map_dfr(analysis_plans, build_plan_row)
 
 sample_size_table
 
