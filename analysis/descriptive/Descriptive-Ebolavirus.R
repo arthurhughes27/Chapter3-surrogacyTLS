@@ -5,6 +5,7 @@
 # ---- Libraries ----
 library(tidyverse)   # loads dplyr, tidyr, ggplot2, stringr, etc.
 library(fs)
+library(patchwork)
 
 # ---- Paths ----
 processed_data_path      <- fs::path("data")
@@ -16,7 +17,9 @@ df_clinical_all <- readRDS(fs::path(processed_data_path, "df_clinical_all.rds"))
 
 # ---- Shared ordering / labelling helpers ----
 
-# Study-group display order (used for both antibody and GE figures)
+# Study-group display order, shared by both figures so the two panels
+# line up on an identical, harmonised y-axis (placebo groups included
+# for both PREVAC and EBOVAC2).
 group_order <- c("prevac-rVSV", "prevac-Ad26MVA", "prevac-placebo",
                  "ebovac2-Ad26MVA", "ebovac2-placebo", "hamburg-rVSV")
 
@@ -34,36 +37,59 @@ group_label_fun <- function(x) {
   paste0(study_label, " ", vaccine)
 }
 
-# Shared heatmap theme/style, reused for both figures
-heatmap_theme <- theme_minimal(base_size = 16) +
-  theme(
-    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
-    axis.text.y     = element_text(size = 13, face = "bold"),
-    axis.title.x    = element_text(size = 14, margin = margin(t = 10)),
-    plot.title      = element_text(size = 19, face = "bold", hjust = 0.5),
-    plot.subtitle   = element_text(size = 12, colour = "grey40", hjust = 0.5,
-                                   margin = margin(b = 12)),
-    panel.grid      = element_blank(),
-    plot.margin     = margin(15, 15, 15, 15)
-  )
+# =============================================================================
+# Shared eligibility: both figures count the SAME set of participants, so
+# the two panels are directly comparable. Eligibility requires:
+#   - transcriptomic (gene expression) data at any timepoint, for everyone
+#   - a valid antibody pairing for the group's primary analysis:
+#       PREVAC-rVSV, Hamburg-rVSV:            day 0 AND day 180
+#       PREVAC-Ad26MVA, EBOVAC2-Ad26MVA:       day 0 AND day 365
+#       PREVAC-placebo:                       day 0 AND (day 180 OR day 365)
+#   - EBOVAC2-Ad26MVA, Hamburg-rVSV additionally require baseline
+#     transcriptomic data (paired-data analysis)
+#   - EBOVAC2-placebo has no defined eligibility rule and so contributes
+#     no eligible participants to either figure; it is kept as an empty
+#     row on both panels purely to keep the y-axis harmonised.
+# =============================================================================
 
-# Build a green heatmap tile + label layer, reused for both figures.
-# df must contain n_participants; text colour adapts to tile darkness.
-heatmap_layers <- function(df) {
-  list(
-    geom_tile(color = "white", linewidth = 0.8),
-    geom_text(
-      aes(label = ifelse(n_participants > 0, n_participants, "")),
-      size = 4.5, fontface = "bold",
-      color = ifelse(df$n_participants > max(df$n_participants) * 0.55,
-                     "white", "grey20")
+# Participants with a transcriptomic (GE) sample at any timepoint
+participants_any_ge <- df_clinical_all %>%
+  filter(!is.na(time)) %>%
+  distinct(participant_id) %>%
+  pull(participant_id)
+
+# Participants with a baseline (P+0D) transcriptomic sample
+participants_baseline_ge <- df_clinical_all %>%
+  filter(time == "P+0D") %>%
+  distinct(participant_id) %>%
+  pull(participant_id)
+
+eligible_participants <- df_clinical_all %>%
+  distinct(participant_id, study_vaccine, ab_p_0, ab_p_180, ab_p_365) %>%
+  mutate(
+    has_ge_any = participant_id %in% participants_any_ge,
+    has_baseline_ge = participant_id %in% participants_baseline_ge,
+    has_valid_ab_pair = case_when(
+      study_vaccine %in% c("prevac-Ad26MVA", "ebovac2-Ad26MVA") ~
+        !is.na(ab_p_0) & !is.na(ab_p_365),
+      study_vaccine %in% c("prevac-rVSV", "hamburg-rVSV") ~
+        !is.na(ab_p_0) & !is.na(ab_p_180),
+      study_vaccine == "prevac-placebo" ~
+        !is.na(ab_p_0) & (!is.na(ab_p_365) | !is.na(ab_p_180)),
+      TRUE ~ FALSE  # ebovac2-placebo: no eligibility rule defined
     ),
-    scale_fill_gradient(low = "white", high = "#237A21", guide = "none")
-  )
-}
+    requires_baseline_pair = study_vaccine %in% c("ebovac2-Ad26MVA", "hamburg-rVSV"),
+    is_eligible = has_ge_any & has_valid_ab_pair &
+      (!requires_baseline_pair | has_baseline_ge)
+  ) %>%
+  filter(is_eligible) %>%
+  pull(participant_id)
+
+df_clinical_eligible <- df_clinical_all %>%
+  filter(participant_id %in% eligible_participants)
 
 # =============================================================================
-# Figure 1: Antibody measurement availability by study-group and timepoint
+# Panel A: Antibody measurement availability by study-group and timepoint
 # =============================================================================
 
 # Desired chronological order: prime then boost
@@ -71,7 +97,7 @@ time_order <- c(
   "p_0", "p_7", "p_14", "p_28", "p_56", "p_63", "p_84", "p_180", "p_365"
 )
 
-df_counts <- df_clinical_all %>%
+df_counts <- df_clinical_eligible %>%
   pivot_longer(
     cols = starts_with("ab_"),
     names_to = "ab_time",
@@ -98,30 +124,8 @@ label_fun <- function(x) {
   )
 }
 
-p1 <- ggplot(df_counts, aes(x = timepoint, y = study_vaccine, fill = n_participants)) +
-  heatmap_layers(df_counts) +
-  scale_x_discrete(labels = label_fun) +
-  scale_y_discrete(labels = group_label_fun) +
-  labs(
-    x = "Timepoint",
-    y = NULL,
-    title = "Availability of Antibody Measurements for Ebolavirus Vaccines",
-    subtitle = "Number of participants with a measurement, by study-group and timepoint"
-  ) +
-  heatmap_theme
-
-p1
-
-ggsave(
-  filename = "ebolavirus_antibody_sample_availability.pdf",
-  path = descriptive_figures_folder,
-  plot = p1,
-  width = 26, height = 15, units = "cm"
-)
-
 # =============================================================================
-# Figure 2: Gene expression sample availability by study-group and timepoint
-#           (restricted to participants with a valid immune-response pairing)
+# Panel B: Gene expression sample availability by study-group and timepoint
 # =============================================================================
 
 # Explicit chronological order of GE timepoints
@@ -131,45 +135,8 @@ ggsave(
 # factor(time, levels = ge_time_order) turning them into NA.
 ge_time_order <- c("P+0D", "P+3H", "P+1D", "P+3D", "P+7D")
 
-group_order <- c("prevac-rVSV", "prevac-Ad26MVA", "prevac-placebo",
-                 "ebovac2-Ad26MVA", "hamburg-rVSV")
-
-# Participants with a baseline (P+0D) gene expression sample
-participants_baseline_ge <- df_clinical_all %>%
-  filter(time == "P+0D") %>%
-  distinct(participant_id) %>%
-  pull(participant_id)
-
-# Identify participants with a valid immune-response day-0/follow-up pairing
-# for their study_vaccine group, AND (for EBOVAC2/Hamburg only) a baseline GE sample:
-#   - PREVAC-Ad26MVA:                       day 0 AND day 365 (ab)
-#   - EBOVAC2-Ad26MVA, EBOVAC2-placebo:     day 0 AND day 365 (ab) AND baseline GE
-#   - PREVAC-rVSV:                          day 0 AND day 180 (ab)
-#   - Hamburg-rVSV:                         day 0 AND day 180 (ab) AND baseline GE
-#   - PREVAC-placebo:                       day 0 AND (365 OR 180) (ab)
-participants_valid_ir <- df_clinical_all %>%
-  filter(study_vaccine != "ebovac2-placebo") %>%
-  distinct(participant_id, study_vaccine, ab_p_0, ab_p_180, ab_p_365) %>%
-  mutate(
-    has_valid_ab_pair = case_when(
-      study_vaccine %in% c("prevac-Ad26MVA", "ebovac2-Ad26MVA") ~
-        !is.na(ab_p_0) & !is.na(ab_p_365),
-      study_vaccine %in% c("prevac-rVSV", "hamburg-rVSV") ~
-        !is.na(ab_p_0) & !is.na(ab_p_180),
-      study_vaccine == "prevac-placebo" ~
-        !is.na(ab_p_0) & (!is.na(ab_p_365) | !is.na(ab_p_180)),
-      TRUE ~ FALSE
-    ),
-    requires_baseline_ge = study_vaccine %in% c("ebovac2-Ad26MVA", "hamburg-rVSV"),
-    has_baseline_ge = participant_id %in% participants_baseline_ge,
-    has_valid_pair = has_valid_ab_pair & (!requires_baseline_ge | has_baseline_ge)
-  ) %>%
-  filter(has_valid_pair) %>%
-  pull(participant_id)
-
-df_counts_ge <- df_clinical_all %>%
-  filter(!is.na(time),
-         participant_id %in% participants_valid_ir) %>%
+df_counts_ge <- df_clinical_eligible %>%
+  filter(!is.na(time)) %>%
   mutate(
     timepoint     = factor(time, levels = ge_time_order),
     study_vaccine = factor(study_vaccine, levels = rev(group_order))
@@ -189,25 +156,77 @@ label_fun_ge <- function(x) {
   )
 }
 
-p2 <- ggplot(df_counts_ge, aes(x = timepoint, y = study_vaccine, fill = n_participants)) +
-  heatmap_layers(df_counts_ge) +
-  scale_x_discrete(labels = label_fun_ge) +
+# =============================================================================
+# Combined, harmonised figure
+# =============================================================================
+
+# Both panels share one colour scale (same 0-to-max range across the two
+# datasets) so tile darkness is directly comparable, and one legend,
+# collected by patchwork below.
+shared_fill_max <- max(df_counts$n_participants, df_counts_ge$n_participants)
+
+# Shared heatmap theme/style, reused for both panels
+heatmap_theme <- theme_minimal(base_size = 16) +
+  theme(
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12),
+    axis.text.y     = element_text(size = 13, face = "bold"),
+    axis.title.x    = element_text(size = 14, margin = margin(t = 10)),
+    plot.title      = element_text(size = 17, face = "bold", hjust = 0.5),
+    panel.grid      = element_blank(),
+    plot.margin     = margin(15, 15, 15, 15)
+  )
+
+# Build a green heatmap tile + label layer, reused for both panels, on a
+# shared fill scale so the two panels are visually comparable.
+heatmap_layers <- function(df, fill_max) {
+  list(
+    geom_tile(color = "white", linewidth = 0.8),
+    geom_text(
+      aes(label = ifelse(n_participants > 0, n_participants, "")),
+      size = 4.5, fontface = "bold",
+      color = ifelse(df$n_participants > fill_max * 0.55, "white", "grey20")
+    ),
+    scale_fill_gradient(
+      low = "white", high = "#237A21",
+      limits = c(0, fill_max),
+      name = "Participants (n)"
+    )
+  )
+}
+
+p1 <- ggplot(df_counts, aes(x = timepoint, y = study_vaccine, fill = n_participants)) +
+  heatmap_layers(df_counts, shared_fill_max) +
+  scale_x_discrete(labels = label_fun) +
   scale_y_discrete(labels = group_label_fun) +
-  labs(
-    x = "Timepoint",
-    y = NULL,
-    title = "Availability of Gene Expression Samples for Ebolavirus Vaccines",
-    subtitle = "Number of eligible participants with a sample, by study-group and timepoint"
-  ) +
+  labs(x = "Timepoint", y = NULL, title = "Antibody measurements") +
   heatmap_theme
 
-p2
+p2 <- ggplot(df_counts_ge, aes(x = timepoint, y = study_vaccine, fill = n_participants)) +
+  heatmap_layers(df_counts_ge, shared_fill_max) +
+  scale_x_discrete(labels = label_fun_ge) +
+  scale_y_discrete(labels = group_label_fun) +
+  labs(x = "Timepoint", y = NULL, title = "Gene expression samples") +
+  heatmap_theme
+
+p_combined <- (p1 / p2) +
+  plot_layout(guides = "collect") +
+  plot_annotation(
+    title = "Availability of Antibody and Gene Expression Measurements Among Eligible Participants",
+    subtitle = "Ebolavirus vaccine studies (PREVAC, EBOVAC2, Hamburg), by study-group and timepoint",
+    theme = theme(
+      plot.title    = element_text(size = 19, face = "bold", hjust = 0.5),
+      plot.subtitle = element_text(size = 12, colour = "grey40", hjust = 0.5,
+                                   margin = margin(b = 12))
+    )
+  )
+
+p_combined
 
 ggsave(
-  filename = "ebolavirus_gene_expression_sample_availability.pdf",
+  filename = "ebolavirus_sample_availability.pdf",
   path = descriptive_figures_folder,
-  plot = p2,
-  width = 26, height = 15, units = "cm"
+  plot = p_combined,
+  width = 26, height = 26, units = "cm"
 )
 
 rm(list = ls())
