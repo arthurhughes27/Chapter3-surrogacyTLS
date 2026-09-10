@@ -1,5 +1,6 @@
 # =============================================================================
-# Script to perform basic study descriptions of PREVAC, Hamburg, EBOVAC2
+# Script to perform basic study descriptions of PREVAC, Hamburg, EBOVAC2,
+# and SDY1276 (TIV)
 # =============================================================================
 
 # ---- Libraries ----
@@ -12,26 +13,28 @@ processed_data_path      <- fs::path("data")
 descriptive_figures_folder <- fs::path("output", "figures", "descriptive")
 
 # ---- Load harmonised clinical data ----
-df_clinical_all <- readRDS(fs::path(processed_data_path, "df_clinical_all.rds")) %>%
-  filter(study_vaccine != "SDY1276-Influenza (IN)")
+df_clinical_all <- readRDS(fs::path(processed_data_path, "df_clinical_all.rds"))
 
 # ---- Shared ordering / labelling helpers ----
 
 # Study-group display order, shared by both figures so the two panels
 # line up on an identical, harmonised y-axis. EBOVAC2-placebo is
-# excluded from both panels.
+# excluded from both panels. SDY1276 (TIV) is included alongside the
+# Ebolavirus vaccine groups.
 group_order <- c("prevac-rVSV", "prevac-Ad26MVA", "prevac-placebo",
-                 "ebovac2-Ad26MVA", "hamburg-rVSV")
+                 "ebovac2-Ad26MVA", "hamburg-rVSV", "SDY1276-Influenza (IN)")
 
-# y-axis labels: acronyms for PREVAC/EBOVAC2, title case for Hamburg,
-# Ad26MVA -> Ad26/MVA for readability
+# y-axis labels: acronyms for PREVAC/EBOVAC2/SDY1276, title case for
+# Hamburg, Ad26MVA -> Ad26/MVA and Influenza (IN) -> TIV for readability
 group_label_fun <- function(x) {
   study   <- str_extract(x, "^[^-]+")
   vaccine <- str_remove(x, "^[^-]+-") %>%
-    str_replace("Ad26MVA", "Ad26/MVA")
+    str_replace("Ad26MVA", "Ad26/MVA") %>%
+    str_replace(fixed("Influenza (IN)"), "TIV")
   study_label <- case_when(
-    str_to_lower(study) == "prevac"  ~ "PREVAC",
-    str_to_lower(study) == "ebovac2" ~ "EBOVAC2",
+    str_to_lower(study) == "prevac"   ~ "PREVAC",
+    str_to_lower(study) == "ebovac2"  ~ "EBOVAC2",
+    str_to_lower(study) == "sdy1276"  ~ "SDY1276",
     TRUE ~ str_to_title(study)               # e.g. "hamburg" -> "Hamburg"
   )
   paste0(study_label, " ", vaccine)
@@ -178,7 +181,7 @@ p_combined <- (p1 / p2) +
 p_combined
 
 ggsave(
-  filename = "ebolavirus_sample_availability.pdf",
+  filename = "vaccine_sample_availability.pdf",
   path = descriptive_figures_folder,
   plot = p_combined,
   width = 26, height = 26, units = "cm"
