@@ -53,8 +53,19 @@ run_rise_pipeline <- function(yone_train, yzero_train, sone_train, szero_train,
       axis.title.y = element_text(size = 20)
     )
 
+  # rise.evaluate()'s gamma.s.plot maps colour to as.factor(treatment)
+  # (0 = pre-vaccination, 1 = post-vaccination) with its own hardcoded
+  # scale_color_manual() (title "Treatment", labels "0"/"1"). Without
+  # touching the SurrogateRank package, override that scale here with an
+  # explicit "Timepoint" legend and readable labels; the colours
+  # themselves are kept identical to the package's own.
   p2_labeled <- p2 +
     labs(title = eval_label) +
+    scale_color_manual(
+      name = "Timepoint",
+      values = c("0" = "#1D8A99", "1" = "#c1121f"),
+      labels = c("0" = "Pre-vaccination", "1" = "Post-vaccination")
+    ) +
     theme(
       plot.title = element_text(face = "bold", size = 25, hjust = 0),
       plot.title.position = "panel",
