@@ -65,10 +65,13 @@ p1 <- ggplot(df_long, aes(x = measure, y = value, fill = measure)) +
   facet_wrap(~ timepoint) +
   # Default log10 breaks (e.g. 0.3, 1, 3, 10) mix powers of ten with
   # half-decade multiples to fill sparse ranges, which reads as an
-  # arbitrary scale. Restrict breaks to clean powers of ten instead, so
-  # the log axis is unambiguous.
-  scale_y_log10(
-    breaks = function(limits) 10^seq(floor(log10(limits[1])), ceiling(log10(limits[2]))),
+  # arbitrary scale. A strict log10 scale also cannot show 0 (log(0) is
+  # undefined), so use a pseudo-log transform instead: linear near zero,
+  # logarithmic further out, letting 0 sit on the axis alongside clean
+  # powers of ten.
+  scale_y_continuous(
+    trans = scales::pseudo_log_trans(sigma = 1, base = 10),
+    breaks = function(limits) c(0, 10^seq(0, ceiling(log10(limits[2])))),
     labels = scales::label_number()
   ) +
   scale_fill_manual(values = c(
