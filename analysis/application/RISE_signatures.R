@@ -28,21 +28,23 @@ geneset_lists <- lapply(gene_lists, genesets_hit_by, genesets = genesets)
 venn_theme <- theme(
   base_size = 20,
   legend.position = "right",
-  legend.text = element_text(size = 12),
-  legend.title = element_text(size = 14),
+  legend.text = element_text(size = 13),
+  legend.title = element_text(size = 15),
   plot.title = element_text(hjust = 0.5, face = "bold", size = 20),
   plot.margin = margin(10, 20, 10, 20)  # extra right/left margin for spacing
 )
 venn_style <- list(
-  scale_fill_gradient(low = "#F4F9FF", high = "#4A7FBF"),
+  scale_fill_gradient(low = "#FFFFFF", high = "#4A7FBF"),
   scale_color_manual(values = rep("#2C3E50", 3)),
   venn_theme
 )
 
 make_venn <- function(lst, subtitle) {
-  ggVennDiagram(lst, label = "count", label_alpha = 0, edge_size = 0.8) +
+  ggVennDiagram(lst, label = "count", label_alpha = 0, edge_size = 0.8, label_size = 6.5, set_size = 7) +
     venn_style +
-    labs(title = subtitle)
+    labs(title = subtitle) +
+    coord_cartesian(clip = "off")+
+    theme(plot.margin = margin(t = 10, r = 35, b = 10, l = 35, unit = "pt"))
 }
 
 p1 <- make_venn(gene_lists, "A) Gene-level")
@@ -52,12 +54,12 @@ p2 <- make_venn(geneset_lists, "B) Geneset-level")
 p_combined <- (p1 | plot_spacer() | p2) +
   plot_layout(widths = c(1, 0.08, 1)) +  # thin spacer column between plots
   plot_annotation(
-    title = "Overlap of TLS Signatures Across Vaccines",
+    title = "Overlap of TLS signatures across vaccines",
     theme = theme(plot.title = element_text(hjust = 0.5, face = "bold", size = 25))
   )
 
 ggsave(fs::path(figure_path, "rise_signature_overlap_by_vaccine.pdf"),
-       p_combined, width = 13, height = 6, dpi = 300)
+       p_combined, width = 15, height = 7, dpi = 300)
 
 # ---- Intersections (common + pairwise) at both levels ----
 get_intersections <- function(lst) {

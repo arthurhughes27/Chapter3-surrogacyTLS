@@ -46,14 +46,14 @@ df_long <- df %>%
     timepoint = factor(timepoint, levels = c("0", "28"), labels = c("Day 0", "Day 28")),
     measure = str_remove(colname, "^ab_p_[0-9]+_?"),
     measure = case_when(
-      measure == "" ~ "Mean",
+      measure == "" ~ "Cross-strain mean",
       str_detect(measure, "brisbane_10")  ~ "A/Brisbane/10/2007",
-      str_detect(measure, "brisbane_59")  ~ "A/Brisbane/59/2007",
+      str_detect(measure, "brisbane_59")  ~ "A/Brisbane/59/2008",
       str_detect(measure, "florida_4")    ~ "B/Florida/4/2006",
       TRUE ~ measure
     ),
-    measure = factor(measure, levels = c("A/Brisbane/10/2007", "A/Brisbane/59/2007",
-                                         "B/Florida/4/2006", "Mean"))
+    measure = factor(measure, levels = c("A/Brisbane/10/2007", "A/Brisbane/59/2008",
+                                         "B/Florida/4/2006", "Cross-strain mean"))
   ) %>%
   filter(!is.na(value))
 
@@ -68,32 +68,35 @@ p1 <- ggplot(df_long, aes(x = measure, y = value, fill = measure)) +
     "A/Brisbane/10/2007" = "#4C72B0",
     "A/Brisbane/59/2008" = "#55A868",
     "B/Florida/4/2006"   = "#C44E52",
-    "Mean"               = "#8172B2"
+    "Cross-strain mean"               = "#8172B2"
   )) +
   labs(
     x = "Response",
-    y = "Nab titer",
-    title = "Distribution of NAb responses by strain and mean at days 0 and 28"
+    y = "NAb titre",
+    title = "Distribution of NAb titres across strains following vaccination with TIV"
   ) +
   theme_minimal(base_size = 12) +
   theme(
     legend.position = "none",
-    axis.text.x = element_text(angle = 30, hjust = 1),
-    strip.text = element_text(face = "bold", size = 12, colour = "black"),
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 13),
+    strip.text = element_text(face = "bold", size = 15, colour = "black"),
     strip.background = element_rect(fill = "grey70", colour = NA),
     panel.grid.minor = element_blank(),
     panel.spacing = unit(2.5, "lines"),
     panel.border = element_rect(colour = "grey70", fill = NA, linewidth = 0.5),
     panel.background = element_rect(fill = "grey98", colour = NA),
-    axis.title = element_text(size = 17),
-    plot.title = element_text(size = 16, face = "bold")
+    axis.title.x = element_blank(),
+    plot.title = element_text(size = 20, face = "bold"),
+    axis.text.y = element_text(size = 15),
+    axis.title.y = element_text(size = 21)
   )
 
 p1
 
 # Save
 ggsave(fs::path(figure_path, "sdy1276_nab_response_distribution.pdf"),
-       p1, width = 10, height = 5, dpi = 300)
+       p1, width = 11, height = 5, dpi = 300)
 
-rm(list = ls())
+# rm(list = ls())
+
 

@@ -125,10 +125,10 @@ shared_fill_max <- max(df_counts$n_participants, df_counts_ge$n_participants)
 # Shared heatmap theme/style, reused for both panels
 heatmap_theme <- theme_minimal(base_size = 16) +
   theme(
-    axis.text.x     = element_text(angle = 45, hjust = 1, size = 12, face = "plain"),
-    axis.text.y     = element_text(size = 13, face = "bold"),
-    axis.title.x    = element_text(size = 14, margin = margin(t = 10)),
-    plot.title      = element_text(size = 17, face = "bold", hjust = 0.5),
+    axis.text.x     = element_text(angle = 45, hjust = 1, size = 14, face = "plain"),
+    axis.text.y     = element_text(size = 13),
+    axis.title.x    = element_text(size = 20, margin = margin(t = 10)),
+    plot.title      = element_text(size = 20, face = "bold", hjust = 0.5),
     panel.grid      = element_blank(),
     plot.margin     = margin(15, 15, 15, 15)
   )
@@ -160,7 +160,8 @@ p1 <- ggplot(df_counts, aes(x = timepoint, y = study_vaccine)) +
   scale_x_discrete(labels = label_fun) +
   scale_y_discrete(labels = group_label_fun) +
   labs(x = "Timepoint", y = NULL, title = "Antibody measurements") +
-  heatmap_theme
+  heatmap_theme +
+  theme(axis.title.x = element_blank())
 
 p2 <- ggplot(df_counts_ge, aes(x = timepoint, y = study_vaccine)) +
   heatmap_layers(df_counts_ge, shared_fill_max) +
@@ -174,7 +175,7 @@ p_combined <- (p1 / p2) +
   plot_annotation(
     title = "Availability of Antibody and Gene Expression Measurements",
     theme = theme(
-      plot.title = element_text(size = 19, face = "bold", hjust = 0.5)
+      plot.title = element_text(size = 25, face = "bold", hjust = 0.5)
     )
   )
 
