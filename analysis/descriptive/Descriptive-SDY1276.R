@@ -59,24 +59,16 @@ df_long <- df %>%
 
 # ---- Plot ----
 p1 <- ggplot(df_long, aes(x = measure, y = value, fill = measure)) +
-  # trim = TRUE clips each violin's density to its own group's observed
-  # data range, so a group whose values sit well above 0 (e.g. most
-  # post-vaccination titres) doesn't grow an artificial tail down
-  # toward 0. bounds = c(0, Inf) (requires ggplot2 >= 3.5.0) is a floor
-  # on top of that, for any group whose data does approach 0.
-  geom_violin(trim = TRUE, bounds = c(0, Inf), alpha = 0.7, colour = "grey30", linewidth = 0.3) +
+  geom_violin(trim = FALSE, alpha = 0.7, colour = "grey30", linewidth = 0.3) +
   geom_boxplot(width = 0.1, outlier.shape = NA, colour = "grey20", fill = "white", alpha = 0.6) +
   geom_jitter(width = 0.06, size = 0.8, alpha = 0.35, colour = "grey20") +
   facet_wrap(~ timepoint) +
   # Default log10 breaks (e.g. 0.3, 1, 3, 10) mix powers of ten with
   # half-decade multiples to fill sparse ranges, which reads as an
-  # arbitrary scale. A strict log10 scale also cannot show 0 (log(0) is
-  # undefined), so use a pseudo-log transform instead: linear near zero,
-  # logarithmic further out, letting 0 sit on the axis alongside clean
-  # powers of ten.
-  scale_y_continuous(
-    trans = scales::pseudo_log_trans(sigma = 1, base = 10),
-    breaks = function(limits) c(0, 10^seq(0, ceiling(log10(limits[2])))),
+  # arbitrary scale. Restrict breaks to clean powers of ten instead, so
+  # the log axis is unambiguous.
+  scale_y_log10(
+    breaks = function(limits) 10^seq(floor(log10(limits[1])), ceiling(log10(limits[2]))),
     labels = scales::label_number()
   ) +
   scale_fill_manual(values = c(
