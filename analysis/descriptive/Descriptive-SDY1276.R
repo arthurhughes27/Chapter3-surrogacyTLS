@@ -59,10 +59,12 @@ df_long <- df %>%
 
 # ---- Plot ----
 p1 <- ggplot(df_long, aes(x = measure, y = value, fill = measure)) +
-  # bounds = c(0, Inf) clips the violin's kernel density estimate at 0
-  # (requires ggplot2 >= 3.5.0), since titres can't be negative and
-  # trim = FALSE would otherwise let the density extend below it.
-  geom_violin(trim = FALSE, bounds = c(0, Inf), alpha = 0.7, colour = "grey30", linewidth = 0.3) +
+  # trim = TRUE clips each violin's density to its own group's observed
+  # data range, so a group whose values sit well above 0 (e.g. most
+  # post-vaccination titres) doesn't grow an artificial tail down
+  # toward 0. bounds = c(0, Inf) (requires ggplot2 >= 3.5.0) is a floor
+  # on top of that, for any group whose data does approach 0.
+  geom_violin(trim = TRUE, bounds = c(0, Inf), alpha = 0.7, colour = "grey30", linewidth = 0.3) +
   geom_boxplot(width = 0.1, outlier.shape = NA, colour = "grey20", fill = "white", alpha = 0.6) +
   geom_jitter(width = 0.06, size = 0.8, alpha = 0.35, colour = "grey20") +
   facet_wrap(~ timepoint) +
