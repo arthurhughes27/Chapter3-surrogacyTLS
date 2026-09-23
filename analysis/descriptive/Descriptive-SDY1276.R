@@ -63,7 +63,14 @@ p1 <- ggplot(df_long, aes(x = measure, y = value, fill = measure)) +
   geom_boxplot(width = 0.1, outlier.shape = NA, colour = "grey20", fill = "white", alpha = 0.6) +
   geom_jitter(width = 0.06, size = 0.8, alpha = 0.35, colour = "grey20") +
   facet_wrap(~ timepoint) +
-  scale_y_log10() +
+  # Default log10 breaks (e.g. 0.3, 1, 3, 10) mix powers of ten with
+  # half-decade multiples to fill sparse ranges, which reads as an
+  # arbitrary scale. Restrict breaks to clean powers of ten instead, so
+  # the log axis is unambiguous.
+  scale_y_log10(
+    breaks = function(limits) 10^seq(floor(log10(limits[1])), ceiling(log10(limits[2]))),
+    labels = scales::label_number()
+  ) +
   scale_fill_manual(values = c(
     "A/Brisbane/10/2007" = "#4C72B0",
     "A/Brisbane/59/2008" = "#55A868",
