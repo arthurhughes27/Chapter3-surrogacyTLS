@@ -114,7 +114,7 @@ rise_res <- run_rise_pipeline(
   yone_test = yone_test, yzero_test = yzero_test,
   sone_test = sone_test, szero_test = szero_test,
   screen_label = "A) Screening: top 20 markers ",
-  eval_label = "B) Evaluation of 11-gene signature",
+  eval_label = "B) Evaluation of",
   figure_path = fs::path(figure_path, "rise_ad26mva_prevac_screening_evaluation.pdf")
 )
 
