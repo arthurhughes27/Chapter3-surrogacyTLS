@@ -7,6 +7,11 @@
 #' Run RISE screening followed by evaluation, combine the two diagnostic
 #' plots into a single labelled figure, and save it to disk.
 #'
+#' @param eval_label Prefix for the evaluation panel's title (e.g.
+#'   "B) Evaluation of"). The number of significant markers found at
+#'   screening and "-gene signature" are appended automatically, so the
+#'   count is always accurate without needing to be hardcoded per
+#'   analysis.
 #' @return A list with the rise.screen() result, the rise.evaluate() result,
 #'   the selected markers/weights, and the combined ggplot grob.
 run_rise_pipeline <- function(yone_train, yzero_train, sone_train, szero_train,
@@ -44,6 +49,8 @@ run_rise_pipeline <- function(yone_train, yzero_train, sone_train, szero_train,
 
   p2 <- rise.eval.res[["gamma.s.plot"]]
 
+  eval_label_full <- paste0(eval_label, " ", length(markers), "-gene signature")
+
   p1_labeled <- p1 +
     labs(title = screen_label) +
     theme(
@@ -60,7 +67,7 @@ run_rise_pipeline <- function(yone_train, yzero_train, sone_train, szero_train,
   # explicit "Timepoint" legend and readable labels; the colours
   # themselves are kept identical to the package's own.
   p2_labeled <- p2 +
-    labs(title = eval_label) +
+    labs(title = eval_label_full) +
     scale_color_manual(
       name = "Timepoint",
       values = c("0" = "#1D8A99", "1" = "#c1121f"),

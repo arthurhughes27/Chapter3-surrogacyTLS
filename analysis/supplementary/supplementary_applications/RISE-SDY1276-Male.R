@@ -95,7 +95,7 @@ rise_res <- run_rise_pipeline(
   yone_test = yone_test, yzero_test = yzero_test,
   sone_test = sone_test, szero_test = szero_test,
   screen_label = "A) Screening: top 20 markers ",
-  eval_label = "B) Evaluation of 57-gene signature",
+  eval_label = "B) Evaluation of",
   figure_path = fs::path(figure_path, "rise_sdy1276_male_screening_evaluation.pdf"),
   screen_power = 0.9, screen_paired = TRUE, n_cores = 8
 )
