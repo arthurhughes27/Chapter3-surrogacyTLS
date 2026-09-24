@@ -2,10 +2,8 @@
 # signatures across related analyses, mirroring the cross-vaccine Venn
 # diagrams in analysis/application/RISE_signatures.R:
 #   - TIV (SDY1276): Female (main) vs Male (supplementary)
-#   - rVSV: PREVAC->Hamburg (main, unreversed) vs Hamburg->PREVAC
-#     (reversed)
-#   - Ad26/MVA: PREVAC->EBOVAC2 (main, unreversed) vs EBOVAC2->PREVAC
-#     (reversed)
+#   - rVSV: PREVAC->Hamburg (main) vs Hamburg->PREVAC (reversed)
+#   - Ad26/MVA: PREVAC->EBOVAC2 (main) vs EBOVAC2->PREVAC (reversed)
 #   - TIV (SDY1276) strains: cross-strain mean vs each of the 3
 #     individual strains (4 sets)
 # Each comparison is saved as its own figure.
@@ -156,8 +154,8 @@ describe_overlap(sig_list_tiv_sex, title_tiv_sex, "rise_signature_overlap_tiv_se
 # =============================================================================
 
 sig_list_rvsv <- list(
-  Unreversed = readRDS(fs::path(application_results_path, "TLS_rVSV_prevac.rds")),
-  Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_rVSV_hamburg_reversed.rds"))
+  Main     = readRDS(fs::path(application_results_path, "TLS_rVSV_prevac.rds")),
+  Reversed = readRDS(fs::path(supplementary_results_path, "TLS_rVSV_hamburg_reversed.rds"))
 )
 title_rvsv <- "Overlap of rVSV TLS signatures between the main and reversed-order analyses"
 
@@ -170,8 +168,8 @@ describe_overlap(sig_list_rvsv, title_rvsv, "rise_signature_overlap_rvsv_reverse
 # =============================================================================
 
 sig_list_ad26mva <- list(
-  Unreversed = readRDS(fs::path(application_results_path, "TLS_Ad26MVA_prevac.rds")),
-  Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_Ad26MVA_ebovac2_reversed.rds"))
+  Main     = readRDS(fs::path(application_results_path, "TLS_Ad26MVA_prevac.rds")),
+  Reversed = readRDS(fs::path(supplementary_results_path, "TLS_Ad26MVA_ebovac2_reversed.rds"))
 )
 title_ad26mva <- "Overlap of Ad26/MVA TLS signatures between the main and reversed-order analyses"
 
