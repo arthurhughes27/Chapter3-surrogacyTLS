@@ -43,6 +43,11 @@ gc()
 
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-Male.R"))
 
+# Requires TLS_TIV_SDY1276.rds from analysis/application/RISE-SDY1276.R
+# (application_master.R) and TLS_TIV_SDY1276_Male.rds from
+# RISE-SDY1276-Male.R above.
+source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-SexOverlap.R"))
+
 gc()
 
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-Ad26MVA-Reversed.R"))
