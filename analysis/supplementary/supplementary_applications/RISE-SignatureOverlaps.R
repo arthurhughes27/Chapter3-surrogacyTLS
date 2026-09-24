@@ -2,9 +2,9 @@
 # signatures across related analyses, mirroring the cross-vaccine Venn
 # diagrams in analysis/application/RISE_signatures.R:
 #   - TIV (SDY1276): Female (main) vs Male (supplementary)
-#   - rVSV: PREVAC->Hamburg (main, unreversed) vs Hamburg->PREVAC
+#   - rVSV: PREVAC->Hamburg (main, main) vs Hamburg->PREVAC
 #     (reversed)
-#   - Ad26/MVA: PREVAC->EBOVAC2 (main, unreversed) vs EBOVAC2->PREVAC
+#   - Ad26/MVA: PREVAC->EBOVAC2 (main, main) vs EBOVAC2->PREVAC
 #     (reversed)
 #   - TIV (SDY1276) strains: cross-strain mean vs each of the 3
 #     individual strains (4 sets)
@@ -55,7 +55,7 @@ make_venn <- function(lst, subtitle) {
 
 # Build the gene-level + geneset-level 2-panel figure for a named list of
 # gene-signature vectors and save it
-make_overlap_figure <- function(sig_list, title, out_file, width = 15, height = 7) {
+make_overlap_figure <- function(sig_list, title, out_file, width = 16, height = 7) {
   geneset_lists <- lapply(sig_list, genesets_hit_by, genesets = genesets)
 
   p1 <- make_venn(sig_list, "A) Gene-level")
@@ -93,7 +93,7 @@ make_overlap_figure(
 
 make_overlap_figure(
   sig_list = list(
-    Unreversed = readRDS(fs::path(application_results_path, "TLS_rVSV_prevac.rds")),
+    Main = readRDS(fs::path(application_results_path, "TLS_rVSV_prevac.rds")),
     Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_rVSV_hamburg_reversed.rds"))
   ),
   title    = "Overlap of rVSV TLS signatures between the main and reversed-order analyses",
@@ -107,7 +107,7 @@ make_overlap_figure(
 
 make_overlap_figure(
   sig_list = list(
-    Unreversed = readRDS(fs::path(application_results_path, "TLS_Ad26MVA_prevac.rds")),
+    Main = readRDS(fs::path(application_results_path, "TLS_Ad26MVA_prevac.rds")),
     Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_Ad26MVA_ebovac2_reversed.rds"))
   ),
   title    = "Overlap of Ad26/MVA TLS signatures between the main and reversed-order analyses",
