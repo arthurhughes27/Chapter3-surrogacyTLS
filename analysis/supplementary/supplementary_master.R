@@ -43,11 +43,6 @@ gc()
 
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-Male.R"))
 
-# Requires TLS_TIV_SDY1276.rds from analysis/application/RISE-SDY1276.R
-# (application_master.R) and TLS_TIV_SDY1276_Male.rds from
-# RISE-SDY1276-Male.R above.
-source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-SexOverlap.R"))
-
 gc()
 
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-Ad26MVA-Reversed.R"))
@@ -58,6 +53,14 @@ gc()
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-Florida.R"))
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-Brisbane10.R"))
 source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SDY1276-Brisbane59.R"))
+
+gc()
+
+# Venn diagrams comparing TLS signatures across related analyses.
+# Requires the signature .rds files from application_master.R (main
+# analyses) and every supplementary_applications/ script above (Male,
+# both Reversed, and all 3 TIV strains).
+source(fs::path("analysis", "supplementary", "supplementary_applications", "RISE-SignatureOverlaps.R"))
 
 gc()
 
