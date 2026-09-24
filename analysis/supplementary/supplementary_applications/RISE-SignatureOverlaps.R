@@ -73,50 +73,115 @@ make_overlap_figure <- function(sig_list, title, out_file, width = 15, height = 
   p_combined
 }
 
+# For a single pairwise comparison (exactly 2 sets), list the elements
+# that are shared vs. distinct to each set, at both the gene and
+# geneset level - i.e. spelling out in citable text exactly what a
+# 2-circle Venn diagram from make_overlap_figure() shows. Not defined
+# for > 2 sets, since "shared"/"distinct" stops being a simple
+# three-way split once there are more than two circles.
+#
+# Returns (invisibly) a nested list of the six element vectors
+# (gene/geneset x only-first/only-second/shared) and, if out_file is
+# given, also writes the same summary to a text file.
+describe_overlap <- function(sig_list, title, out_file = NULL) {
+  if (length(sig_list) != 2) {
+    message(
+      "describe_overlap() only defines shared/distinct elements for ",
+      "exactly 2 sets (got ", length(sig_list), "); skipping."
+    )
+    return(invisible(NULL))
+  }
+
+  set_names <- names(sig_list)
+  geneset_list <- lapply(sig_list, genesets_hit_by, genesets = genesets)
+
+  describe_level <- function(lst, level_name) {
+    a <- lst[[1]]
+    b <- lst[[2]]
+    list(
+      level    = level_name,
+      shared   = sort(intersect(a, b)),
+      only_a   = sort(setdiff(a, b)),
+      only_b   = sort(setdiff(b, a))
+    )
+  }
+
+  levels_out <- list(
+    gene    = describe_level(sig_list, "Gene-level"),
+    geneset = describe_level(geneset_list, "Geneset-level")
+  )
+
+  format_block <- function(block) {
+    fmt_set <- function(x) if (length(x) == 0) "(none)" else paste(x, collapse = ", ")
+    paste0(
+      block$level, " overlap: ", set_names[1], " vs ", set_names[2], "\n",
+      "  Shared (", length(block$shared), "): ", fmt_set(block$shared), "\n",
+      "  Only in ", set_names[1], " (", length(block$only_a), "): ", fmt_set(block$only_a), "\n",
+      "  Only in ", set_names[2], " (", length(block$only_b), "): ", fmt_set(block$only_b), "\n"
+    )
+  }
+
+  text_out <- paste0(
+    title, "\n",
+    strrep("-", nchar(title)), "\n",
+    format_block(levels_out$gene), "\n",
+    format_block(levels_out$geneset)
+  )
+
+  cat(text_out, "\n")
+
+  if (!is.null(out_file)) {
+    writeLines(text_out, fs::path(figure_path, out_file))
+  }
+
+  invisible(levels_out)
+}
+
 # =============================================================================
 # TIV (SDY1276): Female (main) vs Male (supplementary)
 # =============================================================================
 
-make_overlap_figure(
-  sig_list = list(
-    Female = readRDS(fs::path(application_results_path, "TLS_TIV_SDY1276.rds")),
-    Male   = readRDS(fs::path(supplementary_results_path, "TLS_TIV_SDY1276_Male.rds"))
-  ),
-  title    = "Overlap of TIV (SDY1276) TLS signatures between Females and Males",
-  out_file = "rise_signature_overlap_tiv_sex.pdf"
+sig_list_tiv_sex <- list(
+  Female = readRDS(fs::path(application_results_path, "TLS_TIV_SDY1276.rds")),
+  Male   = readRDS(fs::path(supplementary_results_path, "TLS_TIV_SDY1276_Male.rds"))
 )
+title_tiv_sex <- "Overlap of TIV (SDY1276) TLS signatures between Females and Males"
+
+make_overlap_figure(sig_list_tiv_sex, title_tiv_sex, "rise_signature_overlap_tiv_sex.pdf")
+describe_overlap(sig_list_tiv_sex, title_tiv_sex, "rise_signature_overlap_tiv_sex.txt")
 
 # =============================================================================
 # rVSV: main (PREVAC screening -> Hamburg evaluation) vs reversed
 # (Hamburg screening -> PREVAC evaluation)
 # =============================================================================
 
-make_overlap_figure(
-  sig_list = list(
-    Unreversed = readRDS(fs::path(application_results_path, "TLS_rVSV_prevac.rds")),
-    Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_rVSV_hamburg_reversed.rds"))
-  ),
-  title    = "Overlap of rVSV TLS signatures between the main and reversed-order analyses",
-  out_file = "rise_signature_overlap_rvsv_reversed.pdf"
+sig_list_rvsv <- list(
+  Unreversed = readRDS(fs::path(application_results_path, "TLS_rVSV_prevac.rds")),
+  Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_rVSV_hamburg_reversed.rds"))
 )
+title_rvsv <- "Overlap of rVSV TLS signatures between the main and reversed-order analyses"
+
+make_overlap_figure(sig_list_rvsv, title_rvsv, "rise_signature_overlap_rvsv_reversed.pdf")
+describe_overlap(sig_list_rvsv, title_rvsv, "rise_signature_overlap_rvsv_reversed.txt")
 
 # =============================================================================
 # Ad26/MVA: main (PREVAC screening -> EBOVAC2 evaluation) vs reversed
 # (EBOVAC2 screening -> PREVAC evaluation)
 # =============================================================================
 
-make_overlap_figure(
-  sig_list = list(
-    Unreversed = readRDS(fs::path(application_results_path, "TLS_Ad26MVA_prevac.rds")),
-    Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_Ad26MVA_ebovac2_reversed.rds"))
-  ),
-  title    = "Overlap of Ad26/MVA TLS signatures between the main and reversed-order analyses",
-  out_file = "rise_signature_overlap_ad26mva_reversed.pdf"
+sig_list_ad26mva <- list(
+  Unreversed = readRDS(fs::path(application_results_path, "TLS_Ad26MVA_prevac.rds")),
+  Reversed   = readRDS(fs::path(supplementary_results_path, "TLS_Ad26MVA_ebovac2_reversed.rds"))
 )
+title_ad26mva <- "Overlap of Ad26/MVA TLS signatures between the main and reversed-order analyses"
+
+make_overlap_figure(sig_list_ad26mva, title_ad26mva, "rise_signature_overlap_ad26mva_reversed.pdf")
+describe_overlap(sig_list_ad26mva, title_ad26mva, "rise_signature_overlap_ad26mva_reversed.txt")
 
 # =============================================================================
 # TIV (SDY1276) strains: cross-strain mean vs each of the 3 individual
-# strains (4 sets)
+# strains (4 sets). describe_overlap() is not called here since it only
+# defines shared/distinct elements for exactly 2 sets.
 # =============================================================================
 
 make_overlap_figure(
