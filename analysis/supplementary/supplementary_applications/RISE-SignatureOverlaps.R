@@ -195,4 +195,10 @@ make_overlap_figure(
   width    = 17
 )
 
+sig_list_florida = list(Brisbane59  = readRDS(fs::path(supplementary_results_path, "TLS_TIV_SDY1276_Brisbane59.rds")),
+                        Florida     = readRDS(fs::path(supplementary_results_path, "TLS_TIV_SDY1276_Florida.rds")))
+
+describe_overlap(sig_list_florida, "rise_signature_overlap_florida.txt")
+
+
 rm(list = ls())
