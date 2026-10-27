@@ -53,6 +53,12 @@ PRESENTATION_BASE_SIZE <- 14
 PRESENTATION_WIDTH_CM  <- 8
 PRESENTATION_HEIGHT_CM <- 8
 
+# Evaluation panel only: extra canvas width to make room for the
+# right-side legend without squeezing the (coord_fixed) square data
+# panel. Height stays at PRESENTATION_HEIGHT_CM, so the panel itself
+# is unaffected -- only the legend gets breathing room.
+PRESENTATION_EVAL_WIDTH_CM <- 11
+
 # Colours
 SURROGATE_BLUE  <- "#5461E0"
 ENDPOINT_RED    <- "#C8504E"
@@ -254,7 +260,7 @@ p_eval
 ggsave(
   fs::path(figure_path, "tiv_evaluation_presentation.pdf"),
   p_eval,
-  width = PRESENTATION_WIDTH_CM, height = PRESENTATION_HEIGHT_CM, units = "cm",
+  width = PRESENTATION_EVAL_WIDTH_CM, height = PRESENTATION_HEIGHT_CM, units = "cm",
   device = PRESENTATION_DEVICE
 )
 
