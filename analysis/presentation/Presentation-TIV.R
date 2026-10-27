@@ -45,12 +45,13 @@ DECK_SANS_FONT <- "Latin Modern Sans"  # e.g. "Fira Sans", "Lato", "Open Sans"..
 # PDF device rather than the base pdf() device.
 PRESENTATION_DEVICE <- grDevices::cairo_pdf
 
-# Final on-slide size: ~14pt text at this physical size is what
+# Final on-slide size: ~14pt text at this physical canvas size is what
 # PRESENTATION_BASE_SIZE / ggsave's width+height below are set to
-# achieve directly (ggplot2 text sizes are already in points).
+# achieve directly (ggplot2 text sizes are already in points). The
+# LaTeX slide scales the figure to ~70%, landing text at ~10pt there.
 PRESENTATION_BASE_SIZE <- 14
-PRESENTATION_WIDTH_CM  <- 5.5
-PRESENTATION_HEIGHT_CM <- 5.5
+PRESENTATION_WIDTH_CM  <- 8
+PRESENTATION_HEIGHT_CM <- 8
 
 # Colours
 SURROGATE_BLUE  <- "#5461E0"
@@ -157,6 +158,11 @@ p_screen <- ggplot(df_screen, aes(x = delta, y = marker)) +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
     inherit.aes = FALSE, fill = SURROGATE_BLUE, alpha = 0.12
   ) +
+  # Small label on the equivalence band, if there's room for it
+  annotate(
+    "text", x = 0, y = nrow(df_screen) + 0.5, vjust = -0.3,
+    label = TeX("$\\pm\\hat{\\epsilon}$"), size = 3.2, color = SURROGATE_BLUE
+  ) +
   geom_vline(xintercept = 0, color = "grey75", linewidth = 0.4) +
   geom_segment(
     aes(x = ci_lower, xend = ci_upper, y = marker, yend = marker),
@@ -165,17 +171,25 @@ p_screen <- ggplot(df_screen, aes(x = delta, y = marker)) +
   # One colour for all points -- significance is no longer double-encoded
   # via a separate p-value colour scale (all shown markers are significant)
   geom_point(color = SURROGATE_BLUE, size = 2.3) +
-  labs(x = TeX("$\\hat{\\delta}$ (surrogacy metric)"), y = NULL) +
+  labs(x = TeX("$\\hat{\\delta}$ (surrogacy)"), y = NULL) +
+  scale_x_continuous(
+    breaks = c(-1, -0.5, 0, 0.5, 1),
+    labels = c("-1", "-0.5", "0", "0.5", "1")
+  ) +
   coord_cartesian(xlim = c(-1, 1)) +
   theme_minimal(base_size = PRESENTATION_BASE_SIZE) +
   theme(
     text          = element_text(family = DECK_SANS_FONT),
     axis.title.x  = element_text(color = SURROGATE_BLUE, size = PRESENTATION_BASE_SIZE),
-    axis.text.y   = element_text(face = "italic"),
+    axis.text.y   = element_text(face = "italic", size = 12),
     panel.grid.minor   = element_blank(),
     panel.grid.major.y = element_blank(),
     legend.position    = "none",
-    plot.margin        = margin(4, 8, 4, 4)
+    plot.title    = element_blank(),
+    plot.subtitle = element_blank(),
+    plot.background  = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin   = margin(6, 10, 6, 6)
   )
 
 p_screen
@@ -194,29 +208,40 @@ ggsave(
 rank_df <- rise.eval.res$gamma.s.plot$data  # columns: treatment, response.rank, gamma.rank
 
 p_eval <- ggplot(rank_df, aes(x = gamma.rank, y = response.rank, color = treatment)) +
-  geom_point(size = 2.3, alpha = 0.9) +
-  # Dashed identity line, lightened relative to the thesis's solid red
+  geom_point(size = 2, alpha = 0.9) +
+  # Dashed identity line: dark grey, not red/pink
   geom_abline(
     slope = 1, intercept = 0, linetype = "dashed",
-    color = ENDPOINT_RED, alpha = 0.5, linewidth = 1
+    color = "grey40", linewidth = 0.8
   ) +
   scale_color_manual(
     name   = NULL,
     breaks = c("0", "1"),
     values = c("0" = PRE_VACC_GREY, "1" = POST_VACC_TEAL),
-    labels = TeX(c("Pre-vaccination ($A = 0$)", "Post-vaccination ($A = 1$)"))
+    labels = c("0" = "Pre-vaccination", "1" = "Post-vaccination")
   ) +
   labs(
     x = TeX("Composite surrogate $\\hat{\\gamma}_{\\Gamma}$ (rank)"),
     y = TeX("Clinical endpoint $Y$ (rank)")
   ) +
-  coord_fixed(ratio = 1) +
+  scale_x_continuous(breaks = c(0, 25, 50)) +
+  scale_y_continuous(breaks = c(0, 25, 50)) +
+  coord_fixed() +
   theme_minimal(base_size = PRESENTATION_BASE_SIZE) +
   theme(
     text         = element_text(family = DECK_SANS_FONT),
-    axis.title.x = element_text(color = SURROGATE_BLUE, size = PRESENTATION_BASE_SIZE),
-    axis.title.y = element_text(color = ENDPOINT_RED,   size = PRESENTATION_BASE_SIZE),
-    legend.position = "bottom"
+    axis.title.x = element_text(color = SURROGATE_BLUE, size = 12),
+    axis.title.y = element_text(color = ENDPOINT_RED,   size = 12),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey92"),
+    legend.position  = "bottom",
+    legend.direction = "horizontal",
+    legend.box.margin = margin(t = 2),
+    plot.title    = element_blank(),
+    plot.subtitle = element_blank(),
+    plot.background  = element_rect(fill = "white", color = NA),
+    panel.background = element_rect(fill = "white", color = NA),
+    plot.margin   = margin(6, 10, 6, 6)
   )
 
 # The thesis annotates the printed delta/rho directly on the panel; removed
