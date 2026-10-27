@@ -158,9 +158,13 @@ p_screen <- ggplot(df_screen, aes(x = delta, y = marker)) +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
     inherit.aes = FALSE, fill = SURROGATE_BLUE, alpha = 0.12
   ) +
-  # Small label on the equivalence band, if there's room for it
+  # Small label on the equivalence band, if there's room for it. Uses
+  # y = Inf (top-of-panel) rather than a specific numeric row position,
+  # since annotate() with a bare numeric y value on a discrete y scale
+  # (the gene names) raises "Discrete value supplied to a continuous
+  # scale" in current ggplot2.
   annotate(
-    "text", x = 0, y = nrow(df_screen) + 0.5, vjust = -0.3,
+    "text", x = 0, y = Inf, vjust = 1.3,
     label = TeX("$\\pm\\hat{\\epsilon}$"), size = 3.2, color = SURROGATE_BLUE
   ) +
   geom_vline(xintercept = 0, color = "grey75", linewidth = 0.4) +
@@ -176,7 +180,7 @@ p_screen <- ggplot(df_screen, aes(x = delta, y = marker)) +
     breaks = c(-1, -0.5, 0, 0.5, 1),
     labels = c("-1", "-0.5", "0", "0.5", "1")
   ) +
-  coord_cartesian(xlim = c(-1, 1)) +
+  coord_cartesian(xlim = c(-1, 1), clip = "off") +
   theme_minimal(base_size = PRESENTATION_BASE_SIZE) +
   theme(
     text          = element_text(family = DECK_SANS_FONT),
