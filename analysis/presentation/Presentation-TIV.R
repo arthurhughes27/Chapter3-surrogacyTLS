@@ -39,7 +39,7 @@ fs::dir_create(figure_path)
 # supported by base R graphics -- a title with maths in it, e.g. panel
 # B's axis titles, will render entirely in the serif/maths look, which
 # is the standard convention for this anyway).
-DECK_SANS_FONT  <- "sans"  # e.g. "Fira Sans", "Lato", "Open Sans"...
+DECK_SANS_FONT <- "Latin Modern Sans"  # e.g. "Fira Sans", "Lato", "Open Sans"...
 
 # Rendering fonts reliably (especially non-default ones) needs the Cairo
 # PDF device rather than the base pdf() device.
@@ -238,4 +238,4 @@ ggsave(
   device = PRESENTATION_DEVICE
 )
 
-rm(list = ls())
+# rm(list = ls())
