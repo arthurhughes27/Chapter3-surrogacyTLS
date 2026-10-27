@@ -158,15 +158,6 @@ p_screen <- ggplot(df_screen, aes(x = delta, y = marker)) +
     aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax),
     inherit.aes = FALSE, fill = SURROGATE_BLUE, alpha = 0.12
   ) +
-  # Small label on the equivalence band, if there's room for it. Uses
-  # y = Inf (top-of-panel) rather than a specific numeric row position,
-  # since annotate() with a bare numeric y value on a discrete y scale
-  # (the gene names) raises "Discrete value supplied to a continuous
-  # scale" in current ggplot2.
-  annotate(
-    "text", x = 0, y = Inf, vjust = 1.3,
-    label = TeX("$\\pm\\hat{\\epsilon}$"), size = 3.2, color = SURROGATE_BLUE
-  ) +
   geom_vline(xintercept = 0, color = "grey75", linewidth = 0.4) +
   geom_segment(
     aes(x = ci_lower, xend = ci_upper, y = marker, yend = marker),
@@ -175,12 +166,12 @@ p_screen <- ggplot(df_screen, aes(x = delta, y = marker)) +
   # One colour for all points -- significance is no longer double-encoded
   # via a separate p-value colour scale (all shown markers are significant)
   geom_point(color = SURROGATE_BLUE, size = 2.3) +
-  labs(x = TeX("$\\hat{\\delta}$ (surrogacy)"), y = NULL) +
+  labs(x = TeX("$\\hat{\\delta}$"), y = NULL) +
   scale_x_continuous(
     breaks = c(-1, -0.5, 0, 0.5, 1),
     labels = c("-1", "-0.5", "0", "0.5", "1")
   ) +
-  coord_cartesian(xlim = c(-1, 1), clip = "off") +
+  coord_cartesian(xlim = c(-1, 1)) +
   theme_minimal(base_size = PRESENTATION_BASE_SIZE) +
   theme(
     text          = element_text(family = DECK_SANS_FONT),
@@ -238,9 +229,9 @@ p_eval <- ggplot(rank_df, aes(x = gamma.rank, y = response.rank, color = treatme
     axis.title.y = element_text(color = ENDPOINT_RED,   size = 12),
     panel.grid.minor = element_blank(),
     panel.grid.major = element_line(color = "grey92"),
-    legend.position  = "bottom",
-    legend.direction = "horizontal",
-    legend.box.margin = margin(t = 2),
+    legend.position  = "right",
+    legend.direction = "vertical",
+    legend.box.margin = margin(l = 2),
     plot.title    = element_blank(),
     plot.subtitle = element_blank(),
     plot.background  = element_rect(fill = "white", color = NA),
